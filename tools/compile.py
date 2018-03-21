@@ -9,6 +9,7 @@ c_(")(")
 `````````````````````````````````````````````````````````````````````````````'''
 
 import sys
+import os
 
 if len(sys.argv) < 2:
     print("I need a filename passed as param #1.")
@@ -21,23 +22,34 @@ f.close()
 
 l = 0
 
-print("* Parsing " + filename)
+print("Parsing " + filename + "\n")
+
+key = "//@import "
 
 while l < len(lines):
     line = lines[l]
-    
-    if line.startswith("//:@import "):
+
+    if line.startswith(key):
         del lines[l]
-        
-        print("* importing " + line[11:])
-        i = open(line[11:], "r").read().split("\n")
-        
+
+        print("+ importing " + line[len(key):])
+        i = open(line[len(key):], "r").read().split("\n")
+
         lines = lines[:l] + i + lines[l:]
     else:
         l += 1
 
-print()
+code = "\n".join(lines)
 
-f = open("out.js", "w")
-f.write("\n".join(lines))
-f.close()
+replacements = {
+    "\"": "\\\"",
+    "$":  "\$",
+    "`":  "\`",
+}
+
+for key, value in replacements.items():
+    code = code.replace(key, value)
+
+print("\nRunning code:\n")
+
+os.system("node -p \"" + code + "\"")
