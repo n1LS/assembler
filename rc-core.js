@@ -1,15 +1,16 @@
 class Core {
 
     constructor() {
-        this.memory_size = 8000
+        this.memory_size = kCORE_MEMORY_SIZE
         this.current_process_index = 0
         this.cycle = 0
+        this.active = true
 
         this.init_memory()
 
         this.processes = new Array()
 
-        for (var i = 0; i < num_programs; i++) {
+        for (var i = 0; i < kNUM_PROGRAMS; i++) {
             this.processes.push(new Process())
         }
     }
@@ -40,14 +41,16 @@ class Core {
         // run the currently selected thread
         this.cycle++
 
-        console.log()
-        console.log(this.cycle + " CYCLE " + this.current_process_index + ':' + this.current_process().current_instruction_pointer())
+        var cp = this.current_process() 
+        var ip = cp.current_instruction_pointer()
 
-        this.step_instruction(this.current_process().current_instruction_pointer())
+        this.step_instruction(ip)
 
         // prepare next cycle
 
-        this.current_process_index = (this.current_process_index + 1) % num_programs
+        this.current_process_index = (this.current_process_index + 1) % kNUM_PROGRAMS
+
+        return this.active
     }
 
     step_instruction(address) {
@@ -55,14 +58,21 @@ class Core {
         var next_address = (address + 1) % this.memory_size
 
         switch (instruction.opcode) {
-            case MOV: this.MOV(instruction, address); break
-            case ADD: this.ADD(instruction, address); break
-            case DAT: this.DAT(instruction, address);
+            case MOV: 
+                this.MOV(instruction, address)
+                break
+            case ADD: 
+                this.ADD(instruction, address)
+                break
+            case DAT: 
+            this.DAT(instruction, address)
                 next_address = -1
                 break
-            case JMP: next_address = this.JMP(instruction, address);
+            case JMP: 
+                next_address = this.JMP(instruction, address);
                 break
-            default: console.log('UNKNOWN OPCODE: ', instruction.opcode)
+            default: 
+                console.log('UNKNOWN OPCODE: ', instruction.opcode)
                 next_address = -1
         }
 
@@ -72,7 +82,32 @@ class Core {
         }
         else {
             this.current_process().kill_current_thread()
-            // TODO is dead?
+            
+            const id = this.current_process_index
+            const active = this.current_process().num_threads()
+
+            if (active) {
+                console.log(`Status: Process #${id} lost a thread and is down to ${active}`)
+            } else {
+                console.log(`Status: Process #${id} faulted`)
+
+                // TODO handle all but one dead
+                var active_count = 0
+                var active_index
+
+                for (var p = 0; p < this.processes.length; p++) {
+                    if (this.processes[p].num_threads() > 0) {
+                        active_count++
+                        active_index = p
+                    } 
+                }
+
+                if (active_count == 1) {
+                    // we have a winner
+                    console.log(`End of Game: Process #${active_index} wins after ${this.cycle} cycles`)
+                    this.active = false;
+                }
+            }
         }
     }
 

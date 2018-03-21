@@ -15,6 +15,13 @@ class Instruction {
         } else {
             this.b = new Value(0, addr_immediate)
         }
+
+        const op = op_from_code(this.opcode)
+
+        if (!op.operands_valid(this.a, this.b)) {
+            console.log('Invalid openrands. Cannot create instruction!')
+            throw 'InstructionInvalidError';
+        }        
     }
 
     to_string() {

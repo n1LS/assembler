@@ -1,15 +1,8 @@
-var c = 0
-
-const addr_direct       = c++
-const addr_immediate    = c++
-const addr_indirect     = c++
-const addr_predecrement = c++
-
 const addr_names = new Map([
-    [addr_direct,       { display: '$', run: 'D' }],
-    [addr_immediate,    { display: '#', run: 'M' }],
-    [addr_indirect,     { display: '@', run: 'I' }],
-    [addr_predecrement, { display: '<', run: 'P' }],
+    [addr_direct       = 1 << 0, { display: '$', run: 'D' }],
+    [addr_indirect     = 1 << 1, { display: '@', run: 'I' }],
+    [addr_immediate    = 1 << 2, { display: '#', run: 'M' }],
+    [addr_predecrement = 1 << 3, { display: '<', run: 'P' }],
 ])
 
 // precalculated accessors

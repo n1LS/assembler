@@ -38,9 +38,13 @@ class Value {
 class Process {
 
     constructor() {
-        this.max_process_length = 100
+        this.max_process_count = kMAX_PROCESS_COUNT
         this.current_thread = 0
         this.instruction_pointers = []
+    }
+
+    num_threads() {
+        return this.instruction_pointers.length
     }
 
     current_instruction_pointer() {

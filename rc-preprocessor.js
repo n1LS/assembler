@@ -78,7 +78,7 @@ class Preprocessor {
                 }
                 else {
                     // pseudo-op?
-                    if (!PSEUDO_OPCODES.includes(items[1])) {
+                    if (!kPSEUDO_OPCODES.includes(items[1])) {
                         this.errors.push(`E003: Unknown opcode '${items[1]} on line ${o_l} '${ins}'`)
                     }
                 }
@@ -170,8 +170,8 @@ class Preprocessor {
             var pseudo = false
 
             // check for pseudo op codes
-            for (var p in PSEUDO_OPCODES) {
-                var p_op = PSEUDO_OPCODES[p]
+            for (var p in kPSEUDO_OPCODES) {
+                var p_op = kPSEUDO_OPCODES[p]
 
                 if (line.instruction[1] == p_op) {
                     pseudo = true
@@ -245,7 +245,7 @@ class Preprocessor {
         this.errors = new Array()
         this.directions = new Array()
 
-        // trim to ascii
+        // strip all non-ascii characters
         code = this.strip_to_ascii(code)
 
         // split into array
