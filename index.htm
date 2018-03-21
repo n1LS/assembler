@@ -1,0 +1,197 @@
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono|Ubuntu+Mono" rel="stylesheet">
+    <style>
+        * {
+            color: #f0f0f0;
+            border: 0;
+            font-weight: lighter;
+            font-family: 'Overpass Mono', monospace;
+            font-size: 11px;
+            line-height: 90%;
+        }
+
+        input {
+            background: #202020;
+            padding: 8px;
+            height: 32px;
+        }
+
+        #instruction {
+            background: 101010;
+            color: greenyellow;
+        }
+
+        #memory {
+            background: #202020;
+        }
+
+        .o0 {
+            color: #f06020;
+        }
+
+        .o1 {
+            color: #2080f0;
+        }
+
+        .o {
+            color: #808080;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        #right {
+            white-space: pre-wrap;
+            white-space: -moz-pre-wrap;
+            white-space: -pre-wrap;
+            white-space: -o-pre-wrap;
+            word-wrap: break-word;
+            display: inline-block;
+        }
+
+        #left {
+            width: 28ch;
+            float: left;
+            background: #101010;
+        }
+
+        #memory-raw {
+            color: white;
+        }
+
+        #right {
+            width: calc(100% - 28ch);
+            float: left;
+            background: #202020;
+        }
+
+        #toolbar {
+            position: absolute;
+            bottom: 0;
+            height: 32px;
+            width: 100%;
+            background: #404040;
+        }
+    </style>
+
+    <script src="rc-constants.js"></script>
+    <script src="rc-math.js"></script>
+    <script src="rc-instruction-set.js"></script>
+    <script src="rc-instruction.js"></script>
+    <script src="rc-address-modes.js"></script>
+    <script src="rc-preprocessor.js"></script>
+    <script src="rc-assembler.js"></script>
+    <script src="rc-classes.js"></script>
+    <script src="rc-core.js"></script>
+    <script src="rc.js"></script>
+
+    <script>
+
+        function run_cycle() {
+            core.step()
+
+            dump_state()
+        }
+
+        function dump_state() {
+            var last = Math.min(core.memory_size, 40)
+            var dump = core.memory_dump(0, last).join("<br>")
+            document.getElementById("memory").innerHTML = dump
+            document.getElementById("instruction").innerHTML = "NEXT   " + core.next_instruction().to_string()
+
+            var processes = core.processes
+            var proc = processes.length + " process(es)<br><br>"
+
+            for (var p = 0; p < processes.length; p++) {
+                proc += "Process " + p + ":<br>"
+                proc += processes[p].instruction_pointers.join("<br>")
+            }
+
+            document.getElementById("processes").innerHTML = proc;
+
+            var mem = core.memory
+            var dmp = ""
+            const colors = {
+                '-1': "o",
+                '0': "o0",
+                '1': "o1"
+            }
+
+            var last_process = core.memory[0].process
+            dmp = "<span class='" + colors[last_process] + "'>"
+
+            for (var a = 0; a < core.memory_size; a++) {
+                var i = core.memory[a]
+                var op = op_from_code(i.opcode).short_name
+
+                if (i.process != last_process) {
+                    last_process = i.process
+                    var c = colors[i.process]
+                    dmp += "</span><span class='" + c + "'>"
+                }
+
+                dmp += op
+            }
+
+            dmp += "</span>"
+
+            document.getElementById("memory-raw").innerHTML = dmp;
+        }
+
+        function run() {
+            while (1) {
+                run_cycle();
+            }
+        }
+
+        function init_everything() {
+            var code1 =
+                "; imp\n" +
+                "imp mov 0 next\n" +
+                "next dat 0 0";
+
+            var code2 =
+                "; copier\n" +
+                " add #4, 3\n" +
+                " mov 2, @2\n" +
+                " jmp -2\n" +
+                " dat #0 #0";
+
+            var p1 = new Program(code1)
+            core.load_program(p1, 0, 0)
+
+            var p2 = new Program(code2)
+            core.load_program(p2, 1, 20)
+
+            // init both prpgrams
+
+            dump_state()
+        }
+
+    </script>
+
+</head>
+
+<body onload="init_everything()">
+    <div id="left">
+        <pre id="instruction">no instruction</pre>
+        <pre id="memory">no memory dump</pre>
+        <pre id="processes">no process info</pre>
+    </div>
+    <div id="right">
+        <div id="memory-raw">no memory dump</div>
+    </div>
+    <div id="toolbar">
+        <input type=button value="step" onclick="run_cycle()">
+        <input type=button value="dump" onclick="dump_state()">
+        <input type=button value="run" onclick="run()">
+    </div>
+
+</body>
+
+</html>

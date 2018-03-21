@@ -1,0 +1,164 @@
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono|Ubuntu+Mono" rel="stylesheet">
+    <style>
+        * {
+            border: 0;
+            font-weight: lighter;
+            font-family: 'Overpass Mono', monospace;
+            font-size: 11px;
+            line-height: 120%;
+            border: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .gray {
+            color: gray;
+        }
+
+        #editor,
+        #preprocessor_output,
+        #assembler_output {
+            color: white;
+            width: 33%;
+            float: left;
+            height: 100%;
+            background: black;
+        }
+
+        #preprocessor_output {
+            background: #101010;
+        }
+
+        input {
+            height: 32px;
+            padding: 8px;
+            color: white;
+            background: black;
+        }
+
+        #toolbar {
+            clear: both;
+            width: 100%;
+            background: #404040;
+            bottom: 0;
+            position: absolute;
+        }
+
+        b {
+            color: red;
+        }
+
+        i {
+            color: orange;
+            font-style: normal;
+        }
+    </style>
+
+    <script src="rc-constants.js"></script>
+    <script src="rc-math.js"></script>
+    <script src="rc-instruction-set.js"></script>
+    <script src="rc-instruction.js"></script>
+    <script src="rc-address-modes.js"></script>
+    <script src="rc-preprocessor.js"></script>
+    <script src="rc-assembler.js"></script>
+    <script src="rc-classes.js"></script>
+    <script src="rc-core.js"></script>
+    <script src="rc.js"></script>
+
+    <script>
+
+        function preprocess() {
+            var code = document.getElementById("editor").value
+            var prepro = new Preprocessor()
+            var output = prepro.preprocess(code)
+
+            var html = output.code
+
+            html += "<br><span class='gray'>"
+
+            if (output.errors.length) {
+                html += "\n<b>ERRORS:</b>\n" + output.errors.join("\n") + "</b>\n"
+            }
+
+            if (output.warnings.length) {
+                html += "\n<i>WARNINGS:</i>\n" + output.warnings.join("\n")
+            }
+
+            html += "</span>"
+
+            document.getElementById("preprocessor_output").innerHTML = html
+
+            return output.code
+        }
+
+        function assemble(code) {
+            var assembler = new Assembler()
+            var output = assembler.assemble(code)
+
+            var html = output.listing
+
+            html += "<br><span class='gray'>"
+
+            if (output.errors.length) {
+                html += "\n<b>ERRORS:</b>\n" + output.errors.join("\n") + "</b>\n"
+            }
+
+            if (output.warnings.length) {
+                html += "\n<i>WARNINGS:</i>\n" + output.warnings.join("\n")
+            }
+
+            html += "</span>"
+
+            document.getElementById("assembler_output").innerHTML = html
+        }
+
+        function doit() {
+            var p = preprocess()
+            assemble(p)
+        }
+
+    </script>
+
+</head>
+
+<body onload="doit()">
+    <textarea id="editor" onkeyup="doit()">
+;@redcode-n 
+;@name Test Code
+;@author np
+;@description non-functional test code to check 
+;how well the preprocessor works :-)
+    org läbel 🌳
+    mov 0, 1
+läbel:  ADD #4, 3
+    MOV 2, #1 ; comment
+    MOV läbel, @2 ; comment
+    JMP -2
+base_pointer: DAT 0 0
+base_pointer: DAT 0 0
+    JMP base_pointer
+    JMP base_pointer
+    JMZ base_pointer+3
+    JMZ 0*base_pointer
+lbel:   NOP ; duplicate label
+    ;; comment lines
+    DAT      #0, #läbel
+    ;; moart commentsw 
+    NOP
+    END
+ MOV 3, 1
+ MOV 7, @2
+ CMP läbel, läbel
+; is everything after end ignored?!
+Yes, otherwise this would be a problem</textarea>
+    <pre id="preprocessor_output">preprocessor output</pre>
+    <pre id="assembler_output">assembler output</pre>
+    <div id="toolbar">
+        <input type="button" value="assemble" onclick="doit()">
+    </div>
+</body>
+
+</html>
