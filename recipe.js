@@ -12,28 +12,40 @@ var core = new Core()
 
 // load first program
 
-var code_1 = " mov 0 1"
+var code_1 = " ADD #4, 3\n" +
+             " MOV 2, @2\n" + 
+             " JMP -2"
 var program_1 = new Program(code_1)
 
-core.load_program(program_1, 0, 0)
+core.load_program(program_1, 0, 4000)
 
 // load second program
 
 var code_2 = " mov 0 1"
 var program_2 = new Program(code_2)
 
-core.load_program(program_2, 1, 10)
+core.load_program(program_2, 1, 0)
 
 // run run run
 
 console.log(core.memory_dump(0, 20).join("\n"))
 console.log()
 
-for (var i = 0; i < 100000000; i++) {
-    core.step()
+var num_cycles = 1000000
+
+console.log(`Running ${num_cycles} cycles...`)
+
+var done = false
+
+for (var i = 0; i < num_cycles; i++) {
+    if (!core.step()) {
+        break;
+    }
 }
 
+console.log()
 console.log(core.memory_dump(0, 20).join("\n"))
 
 // done
 "done. no crash."
+
