@@ -79,12 +79,12 @@ class Assembler {
         this.errors = new Array()
 
         if (typeof string == 'undefined') {
-            string = ""
+            string = ''
         }
         
         var listing = new Array()
         var instructions = new Array()
-        var components = string.split("\n")
+        var components = string.split('\n')
 
         this.labels = new Map()
 
@@ -98,7 +98,7 @@ class Assembler {
         }
 
         return {
-            listing: listing.join("\n"),
+            listing: listing.join('\n'),
             code: instructions,
             errors: this.errors,
             warnings: this.warnings

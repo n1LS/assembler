@@ -1,9 +1,9 @@
-const b64_encoding = "0123456789DmnYjzdCiV;>]NZR^($Qb%{LAalTfOKvk/,IEwJ&?S_uG-}*=.oMgUys#dCiVBq:xpceP|htW@+FX)H[<r"
+const b64_encoding = '0123456789DmnYjzdCiV;>]NZR^($Qb%{LAalTfOKvk/,IEwJ&?S_uG-}*=.oMgUys#dCiVBq:xpceP|htW@+FX)H[<r'
 const b64_len = b64_encoding.length
 
 function i2s_s(value, length) {
     if (typeof length === 'undefined') { length = 0; }
-    const sign = (value < 0 ? "v" : "^")
+    const sign = (value < 0 ? 'v' : '^')
     value = value < 0 ? -value : value;
     return sign + i2s(value, length)
 }
@@ -11,7 +11,7 @@ function i2s_s(value, length) {
 function i2s(i, length) {
     if (typeof length === 'undefined') { length = 0; }
     
-    var s = ""
+    var s = ''
 
     while (i > 0 || length > s.length) {
         s = b64_encoding.charAt(i % b64_len) + s 

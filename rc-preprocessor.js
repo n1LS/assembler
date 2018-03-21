@@ -19,14 +19,14 @@ class Preprocessor {
                 line = line.substr(0, line.indexOf(';'))
             }
 
-            // skip everything after "END"
-            if (line.trim() == "END") {
+            // skip everything after 'END'
+            if (line.trim() == 'END') {
                 var l = lines.length - i - 1
                 if (l) {
                     this.warnings.push(`W002: ${l} lines after END token`);
                 }
                 lines.splice(i, l)
-                line = ""
+                line = ''
             }
 
             if (line.trim().length) {
@@ -98,7 +98,7 @@ class Preprocessor {
     join_instructions(instructions) {
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
-            instructions[i] = ins.instruction.join("\t")
+            instructions[i] = ins.instruction.join('\t')
         }
 
         // insert all directions at the head
@@ -191,7 +191,7 @@ class Preprocessor {
     evaluate_address(address) {
         // check if the only contents is now numberical + operand
         for (var i = 0; i < address.length; i++) {
-            const valid_chars = all_address_mode_names + "0123456789+-/*"
+            const valid_chars = all_address_mode_names + '0123456789+-/*'
 
             if (!valid_chars.includes(address.charAt(i))) {
                 this.errors.push(`E002: Unknown label in address '${address}'`)
@@ -249,7 +249,7 @@ class Preprocessor {
         code = this.strip_to_ascii(code)
 
         // split into array
-        var components = code.toUpperCase().split("\n")
+        var components = code.toUpperCase().split('\n')
 
         // strip all non-code lines and turn the strings into [index, text] 
         // objects
@@ -271,7 +271,7 @@ class Preprocessor {
         this.join_instructions(components)
 
         // join the lines
-        var output = components.join("\n")
+        var output = components.join('\n')
 
         return {
             code: output,

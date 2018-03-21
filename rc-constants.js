@@ -1,4 +1,4 @@
-const kPSEUDO_OPCODES = ["ORG", "END"]
+const kPSEUDO_OPCODES = ['ORG', 'END']
 
 const kNUM_PROGRAMS = 2
 const kCORE_MEMORY_SIZE = 4096
