@@ -13,7 +13,7 @@ _WorkingTitle_ is an assembly-type programming language inspired heavily by and 
 ### MOV A, B
 Copy A to B
 ### ADD
-Add A to B, write result to B
+ADD replaces the B-target with the sum of the A-value and the B-value
 ### JMP A
 Continue execution at A
 ### FRK A
