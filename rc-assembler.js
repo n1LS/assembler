@@ -23,7 +23,7 @@ class Assembler {
     }
 
     parse_instruction(input) {
-        var bak = input
+        var bak = input.replace(/\t/g, ' ')
         var items = input.split('\t')
         
         // find correct opcode
@@ -69,7 +69,13 @@ class Assembler {
             values[t] = new Value(v, a)
         }
 
-        var i = new Instruction(opcode.opcode, values[0], values[1])
+        var i = null
+        
+        try {
+            i = new Instruction(opcode.opcode, values[0], values[1])
+        } catch (e) {
+            this.errors.push(`E008: Invalid opcode / address mode combination in '${bak}'`)
+        }
 
         return i
     }

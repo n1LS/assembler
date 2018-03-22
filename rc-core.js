@@ -24,14 +24,14 @@ class Core {
         }
     }
 
-    load_program(program, user_id, address) {
+    load_program(program, process_id, address) {
         for (var a = 0; a < program.instructions.length; a++) {
             this.memory[a + address] = program.instructions[a]
-            this.memory[a + address].process = user_id
+            this.memory[a + address].process_id = process_id
         }
 
-        this.processes[user_id].clear()
-        this.processes[user_id].add_thread(address)
+        this.processes[process_id].pop_all()
+        this.processes[process_id].push(address)
     }
 
     current_process() {
@@ -42,12 +42,11 @@ class Core {
         // run the currently selected thread
         this.cycle++
 
-        var cp = this.current_process() 
-        var ip = cp.current_instruction_pointer()
+        const ip = this.current_process().pop()
 
         this.step_instruction(ip)
 
-        // prepare next cycle
+        // prepare next cycle process
 
         this.current_process_index = (this.current_process_index + 1) % kNUM_PROGRAMS
 
@@ -55,25 +54,27 @@ class Core {
     }
 
     step_instruction(address) {
-        var instruction = this.memory[address]
-        var next_address = null
-
-        switch (instruction.opcode) {
-            case MOV: next_address = this.MOV(instruction, address); break
-            case ADD: next_address = this.ADD(instruction, address); break
-            case JMP: next_address = this.JMP(instruction, address); break
+        // own the instruction
+        this.memory[address].process_id = this.current_process_index
+        
+        // grab a copy of the instruction to cache it and prevent changes during
+        // execution
+        const instruction = this.memory[address].copy()
+        
+        // special handling for the for opcode that breaks protocol by spawning
+        // another thrad
+        if (instruction.forks) {
+            this.current_process().push((address + 1) % kCORE_MEMORY_SIZE)
         }
 
-        
+        var next_address = instruction.execute(address, this)
+
         if (next_address != null) {
             next_address = (address + next_address) % kCORE_MEMORY_SIZE
 
-            this.current_process().write(next_address)
-            this.current_process().step()
+            this.current_process().push(next_address)
         }
         else {
-            this.current_process().kill_current_thread()
-            
             const id = this.current_process_index
             const active = this.current_process().num_threads()
 
@@ -102,47 +103,10 @@ class Core {
         }
     }
 
-    JMP(instruction, address) {
-        const destination = this.alu.resolve_address(instruction.a, address, this.memory)
-        return (destination - address)
-    }
-    
-    ADD(instruction, address) {
-        switch (instruction.a.mode) {
-            case addr_immediate:
-                switch (instruction.b.mode) {
-                    case addr_immediate:
-                        instruction.b.value += instruction.a.value
-                        break
-                    case addr_direct:
-                    case addr_indirect:
-                        var dst = this.alu.resolve_address(instruction.b, address, this.memory)
-                        this.memory[dst].b.value += instruction.a.value
-                        break
-                }
-                break
-            
-            case addr_direct:
-            case addr_indirect:
-                console.log(`Unhandled case in ${instruction} at address ${address}`)
-        }
-        
-        return 1
-    }
-    
-    MOV(instruction, address) {
-        var abs_source = this.alu.resolve_address(instruction.a, address, this.memory)
-        var abs_destination = this.alu.resolve_address(instruction.b, address, this.memory)
-        
-        // copy in memory
-        this.memory[abs_destination] = this.memory[abs_source].clone()
-        return 1
-    }
-
     /* UI IO stuff that kinda needs to be moved out of here *******************/
 
     next_instruction() {
-        return this.memory[this.current_process().current_instruction_pointer()]
+        return this.memory[this.current_process().next()]
     }
 
     dump() {

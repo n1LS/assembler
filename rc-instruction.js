@@ -2,21 +2,12 @@ class Instruction {
 
     constructor(opcode, value_a, value_b) {
         this.opcode = opcode
-        this.process = -1
+        this.process_id = -1
 
-        if (value_a != null) {
-            this.a = value_a
-        } else {
-            this.a = new Value(0, addr_immediate)
-        }
+        this.a = value_a ? value_a : new Value(0, default_address_mode)
+        this.b = value_b ? value_b : new Value(0, default_address_mode)
 
-        if (value_b != null) {
-            this.b = value_b
-        } else {
-            this.b = new Value(0, addr_immediate)
-        }
-
-        const op = op_from_code(this.opcode)
+        const op = Opcode.op_from_code(this.opcode)
 
         if (!op.operands_valid(this.a, this.b)) {
             console.log('Invalid openrands. Cannot create instruction!')
@@ -24,8 +15,28 @@ class Instruction {
         }        
     }
 
+    copy() {
+        var a = new Value(this.a.value, this.a.mode)
+        var b = new Value(this.b.value, this.b.mode)
+        var i = new Instruction(this.opcode, a, b)
+
+        i.process_id = this.process_id
+
+        return i;
+    }
+
+    execute(address, core) {
+        this.a.pointer = core.alu.resolve(this.a, address, core.memory)
+        this.b.pointer = core.alu.resolve(this.b, address, core.memory)
+
+        const op = Opcode.op_from_code(this.opcode)
+        return op.implementation(this, address, core)
+    }
+
+    //* boring io stuff ********************************************************
+
     to_string() {
-        var op = op_from_code(this.opcode)
+        const op = Opcode.op_from_code(this.opcode)
         var out = op.name
 
         if (op.num_params > 0) {
@@ -44,7 +55,7 @@ class Instruction {
     }
 
     to_short_string() {
-        var op = op_from_code(this.opcode)
+        const op = Opcode.op_from_code(this.opcode)
         var out = op.short_name
         
         out += addr_names.get(this.a.mode).run + i2s_s(this.a.value, 4)
@@ -53,14 +64,45 @@ class Instruction {
         return out
     }
 
-    clone() {
-        var a = new Value(this.a.value, this.a.mode)
-        var b = new Value(this.b.value, this.b.mode)
-        var i = new Instruction(this.opcode, a, b)
+    /* opcode instruction implementation **************************************/
 
-        i.process = this.process
-
-        return i;
+    MOV(address, core) {
+        if (this.a.mode == addr_immediate) {
+            // write a-val to b-target
+            core.memory[this.b.pointer].b.value = this.a.value
+        }
+        else {
+            core.memory[this.b.pointer] = core.memory[address].copy()
+        }
+        
+        return 1
     }
 
+    ADD(address, core) {
+        if (this.a.mode == addr_immediate) {
+            core.memory[this.b.pointer].b.value += this.a.value
+        }
+        else {
+            core.memory[this.b.pointer].a.value += this.a.value
+            core.memory[this.b.pointer].b.value += this.b.value
+        }
+        
+        return 1
+    }
+
+    JMP(address, core) {
+        return this.a.pointer - address
+    }
+
+    DAT(address, core) {
+        return null
+    }
+
+    NOP(address, core) {
+        return 1
+    }
+
+    FRK(adress, core) {
+        return this.a.pointer
+    }    
 }

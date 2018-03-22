@@ -31,6 +31,7 @@ class Value {
     constructor(value, mode) {
         this.value = value
         this.mode = mode
+        this.pointer = 0
     }
 
 }
@@ -38,8 +39,6 @@ class Value {
 class Process {
 
     constructor() {
-        this.max_process_count = kMAX_PROCESS_COUNT
-        this.current_thread = 0
         this.instruction_pointers = []
     }
 
@@ -47,29 +46,22 @@ class Process {
         return this.instruction_pointers.length
     }
 
-    current_instruction_pointer() {
-        return this.instruction_pointers[this.current_thread]
-    }
-
-    add_thread(address) {
-        this.instruction_pointers.push(address)
-    }
-
-    clear() {
+    pop_all() {
         this.instruction_pointers = []
-        this.current_thread = 0
+    }
+    
+    push(address) {
+        if (this.instruction_pointers.length < kMAX_PROCESS_COUNT) {
+            this.instruction_pointers.push(address)
+        }
     }
 
-    write(address) {
-        this.instruction_pointers[this.current_thread] = address
+    pop() {
+        return this.instruction_pointers.shift()
     }
 
-    step() {
-        this.current_thread = (this.current_thread + 1) % this.instruction_pointers.length
-    }
-
-    kill_current_thread() {
-        this.instruction_pointers.splice(this.current_thread, 1);
+    next() {
+        return this.instruction_pointers[0]
     }
 
 }

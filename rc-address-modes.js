@@ -23,33 +23,31 @@ function address_mode_name(mode) {
 
 class ALU {
     
-        constructor(memory_size) {
+        constructor() {
         }
-    
-        resolve_address(value, address, memory) {
-            var addr
-    
+
+        pointer(value, address, memory) {
             switch (value.mode) {
-                case addr_predecrement:
-                    var p = (address + value.value) % kCORE_MEMORY_SIZE
-                    this.memory[p].b.value--
-                    addr = address + value.value + memory[p].b.value
-                    break
-                case addr_direct:
-                    addr = address + value.value
-                    break
                 case addr_immediate:
-                    console.log('ERR: Cannot resolve absolute address!')
-                    addr = value.value
-                    break
+                    return 0
+
+                case addr_direct:
+                    return value.value
+
+                case addr_predecrement:
+                    var dst = (value.value + address) % kCORE_MEMORY_SIZE
+                    memory[dst].b.value--
+                    return memory[dst].b.value
+
                 case addr_indirect:
-                    var p = (address + value.value) % kCORE_MEMORY_SIZE
-                    addr = address + value.value + memory[p].b.value
-                    break
-                default:
-                    console.log('ERR: unhandled address mode at address', address)
+                    var dst = (value.value + address) % kCORE_MEMORY_SIZE
+                    return value.value + memory[dst].b.value
             }
-    
-            return addr % kCORE_MEMORY_SIZE
         }
+
+        resolve(value, address, memory) {
+            var dst = this.pointer(value, address, memory)
+            return (dst + address) % kCORE_MEMORY_SIZE
+        }
+        
     }
