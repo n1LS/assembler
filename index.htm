@@ -27,15 +27,15 @@
             background: #202020;
         }
 
-        .o0 {
+        .A {
             color: #f06020;
         }
 
-        .o1 {
+        .B {
             color: #2080f0;
         }
 
-        .o {
+        .O {
             color: #808080;
         }
 
@@ -81,25 +81,36 @@
 
     <script src="rc-constants.js"></script>
     <script src="rc-math.js"></script>
-    <script src="rc-instruction-set.js"></script>
-    <script src="rc-instruction.js"></script>
     <script src="rc-address-modes.js"></script>
     <script src="rc-preprocessor.js"></script>
     <script src="rc-assembler.js"></script>
     <script src="rc-classes.js"></script>
     <script src="rc-core.js"></script>
+    <script src="rc-instruction.js"></script>
+    <script src="rc-instruction-set.js"></script>
     <script src="rc.js"></script>
-
+    
     <script>
-
+        
+        var timer
+        
+        function run() {
+            var Q=10000
+            while (Q>0) { run_cycle();Q-- }
+            // timer = setInterval(run_cycle, 1)
+        }
+        
+        function stop() {
+            clearInterval(timer)
+        }
+        
         function run_cycle() {
             core.step()
-
             dump_state()
         }
 
         function dump_state() {
-            var last = Math.min(core.memory_size, 40)
+            var last = Math.min(kCORE_MEMORY_SIZE, 40)
             var dump = core.memory_dump(0, last).join("<br>")
             document.getElementById("memory").innerHTML = dump
             document.getElementById("instruction").innerHTML = "NEXT   " + core.next_instruction().to_string()
@@ -108,30 +119,28 @@
             var proc = processes.length + " process(es)<br><br>"
 
             for (var p = 0; p < processes.length; p++) {
-                proc += "Process " + p + ":<br>"
-                proc += processes[p].instruction_pointers.join("<br>")
+                proc += `Process ${p}:<br>` + processes[p].instruction_pointers.join("<br>") + "<br>"
             }
 
             document.getElementById("processes").innerHTML = proc;
 
             var mem = core.memory
-            var dmp = ""
             const colors = {
-                '-1': "o",
-                '0': "o0",
-                '1': "o1"
+                '-1': "O",
+                '0': "A",
+                '1': "B"
             }
 
-            var last_process = core.memory[0].process
-            dmp = "<span class='" + colors[last_process] + "'>"
+            var last_process = core.memory[0].process_id
+            var dmp = "<span class='" + colors[last_process] + "'>"
 
-            for (var a = 0; a < core.memory_size; a++) {
+            for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
                 var i = core.memory[a]
-                var op = op_from_code(i.opcode).short_name
+                var op = Opcode.op_from_code(i.opcode).short_name
 
-                if (i.process != last_process) {
-                    last_process = i.process
-                    var c = colors[i.process]
+                if (i.process_id != last_process) {
+                    last_process = i.process_id
+                    var c = colors[i.process_id]
                     dmp += "</span><span class='" + c + "'>"
                 }
 
@@ -143,12 +152,6 @@
             document.getElementById("memory-raw").innerHTML = dmp;
         }
 
-        function run() {
-            while (1) {
-                run_cycle();
-            }
-        }
-
         function init_everything() {
             var code1 =
                 "; imp\n" +
@@ -156,19 +159,19 @@
                 "next dat 0 0";
 
             var code2 =
-                "; copier\n" +
+                "; dwarf\n" +
                 " add #4, 3\n" +
                 " mov 2, @2\n" +
                 " jmp -2\n" +
-                " dat #0 #0";
-
-            var p1 = new Program(code1)
-            core.load_program(p1, 0, 0)
-
-            var p2 = new Program(code2)
-            core.load_program(p2, 1, 20)
+                "dummy dat #42 #0";
 
             // init both prpgrams
+            
+            var p1 = new Program(code1)
+            core.load_program(p1, 0, 4082)
+
+            var p2 = new Program(code2)
+            core.load_program(p2, 1, 0)
 
             dump_state()
         }
@@ -190,6 +193,7 @@
         <input type=button value="step" onclick="run_cycle()">
         <input type=button value="dump" onclick="dump_state()">
         <input type=button value="run" onclick="run()">
+        <input type=button value="stop" onclick="stop()">
     </div>
 
 </body>
