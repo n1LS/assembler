@@ -48,7 +48,7 @@ class Core {
 
         // prepare next cycle process
 
-        this.current_process_index = (this.current_process_index + 1) % kNUM_PROGRAMS
+        this.current_process_index = (1 + this.current_process_index) % kNUM_PROGRAMS
 
         return this.active
     }
@@ -64,13 +64,13 @@ class Core {
         // special handling for the for opcode that breaks protocol by spawning
         // another thrad
         if (instruction.forks) {
-            this.current_process().push((address + 1) % kCORE_MEMORY_SIZE)
+            this.current_process().push(wrap(address + 1))
         }
 
         var next_address = instruction.execute(address, this)
 
         if (next_address != null) {
-            next_address = (address + next_address) % kCORE_MEMORY_SIZE
+            next_address = wrap(address + next_address)
 
             this.current_process().push(next_address)
         }

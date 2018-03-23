@@ -37,15 +37,9 @@ class Instruction {
 
     to_string() {
         const op = Opcode.op_from_code(this.opcode)
-        var out = op.name
-
-        if (op.num_params > 0) {
-            out += ' ' + address_mode_name(this.a.mode) + this.a.value
-        }
-
-        if (op.num_params > 1) {
-            out += ' ' + address_mode_name(this.b.mode) + this.b.value
-        }
+        var out = op.name +
+            ' ' + address_mode_name(this.a.mode) + this.a.value +
+            ' ' + address_mode_name(this.b.mode) + this.b.value
 
         while (out.length < 20) {
             out += ' '
@@ -64,45 +58,4 @@ class Instruction {
         return out
     }
 
-    /* opcode instruction implementation **************************************/
-
-    MOV(address, core) {
-        if (this.a.mode == addr_immediate) {
-            // write a-val to b-target
-            core.memory[this.b.pointer].b.value = this.a.value
-        }
-        else {
-            core.memory[this.b.pointer] = core.memory[address].copy()
-        }
-        
-        return 1
-    }
-
-    ADD(address, core) {
-        if (this.a.mode == addr_immediate) {
-            core.memory[this.b.pointer].b.value += this.a.value
-        }
-        else {
-            core.memory[this.b.pointer].a.value += this.a.value
-            core.memory[this.b.pointer].b.value += this.b.value
-        }
-        
-        return 1
-    }
-
-    JMP(address, core) {
-        return this.a.pointer - address
-    }
-
-    DAT(address, core) {
-        return null
-    }
-
-    NOP(address, core) {
-        return 1
-    }
-
-    FRK(adress, core) {
-        return this.a.pointer
-    }    
 }

@@ -35,19 +35,20 @@ class ALU {
                     return value.value
 
                 case addr_predecrement:
-                    var dst = (value.value + address) % kCORE_MEMORY_SIZE
+                    var dst = wrap(value.value + address)
                     memory[dst].b.value--
-                    return memory[dst].b.value
+                    return value.value + memory[dst].b.value
 
                 case addr_indirect:
-                    var dst = (value.value + address) % kCORE_MEMORY_SIZE
-                    return value.value + memory[dst].b.value
+                    var dst = wrap(value.value + address)
+                    var ret = value.value + memory[dst].b.value
+                    return ret;
             }
         }
 
         resolve(value, address, memory) {
             var dst = this.pointer(value, address, memory)
-            return (dst + address) % kCORE_MEMORY_SIZE
+            return wrap(dst + address)
         }
         
     }
