@@ -1,8 +1,10 @@
 <html>
 
 <head>
-    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono|Ubuntu+Mono" rel="stylesheet">
-    <style>
+        <meta charset="utf-8"/>
+        <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
+        <link href="https://www.schickt.de/fonts/icon.css" rel="stylesheet">
+        <style>
         * {
             color: #f0f0f0;
             border: 0;
@@ -77,6 +79,11 @@
             width: 100%;
             background: #404040;
         }
+
+        #display {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 
     <script src="rc-constants.js"></script>
@@ -95,9 +102,8 @@
         var timer
         
         function run() {
-            var Q=10000
-            while (Q>0) { run_cycle();Q-- }
-            // timer = setInterval(run_cycle, 1)
+            stop()
+            timer = setInterval(run_cycle, 20)
         }
         
         function stop() {
@@ -150,6 +156,57 @@
             dmp += "</span>"
 
             document.getElementById("memory-raw").innerHTML = dmp;
+
+            draw()
+        }
+
+        function draw() {
+            const canvas = document.getElementById("display")
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
+            const ctx = canvas.getContext("2d")
+            const size = Math.floor(Math.sqrt((canvas.clientHeight * canvas.clientWidth) / kCORE_MEMORY_SIZE) - 1);
+            const cols = Math.floor(canvas.clientWidth / size)
+
+            ctx.clearRect(0, 0, canvas.width, canvas.width)
+
+            function location(index) {
+                return { x: index % cols, y: Math.floor(index / cols) }
+            }
+
+            ctx.font = `${size * 0.85}px Icon`;
+
+            for (var i = 0; i < kCORE_MEMORY_SIZE; i++)  {
+                var l = location(i)
+                const x = l.x * (1 + size)
+                const y = l.y * (1 + size)
+
+                const instruction = core.memory[i]
+
+                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][instruction.process_id + 1]
+                ctx.fillRect(x, y, size, size)
+                var op = Opcode.op_from_code(instruction.opcode).name
+                
+                const characters = {
+                    'DAT': '\uf0aa',
+                    'MOV': '\uf024',
+                    'ADD': '\uf021',
+                    'NOP': '\uf020',
+                    'JMP': '\uf159',
+                    'FRK': '\uf0b6',
+                    'SUB': '\uf022',
+                    'JMZ': '\uf000',
+                    'JMN': '\uf000',
+                    'CMP': '\uf000',
+                    'SLT': '\uf000',
+                    'DJN': '\uf000',
+                }
+
+                ctx.fillStyle = ["#606060","#ffc080", "#80e0ff"][instruction.process_id + 1]
+                ctx.fillText(characters[op], x + 1, y + size - 2);
+            }
+           
         }
 
         function init_everything() {
@@ -165,29 +222,39 @@
                 " jmp -2\n" +
                 "dummy dat #42 #0";
 
+            var code3 = 
+                "; stone \n" +
+                " mov <2, 3\n" + 
+                " mov 3, -1\n" + 
+                " jmp -2\n" + 
+                " dat #0 #0\n" + 
+                " dat #-5084, #5084";
+
             // init both prpgrams
             
             var p1 = new Program(code1)
-            core.load_program(p1, 0, 4082)
+            core.load_program(p1, 0, 2000)
 
-            var p2 = new Program(code2)
+            var p2 = new Program(code3)
             core.load_program(p2, 1, 0)
 
             dump_state()
+            draw()
         }
 
     </script>
 
 </head>
 
-<body onload="init_everything()">
+<body onload="init_everything()" onresize="draw()">
     <div id="left">
         <pre id="instruction">no instruction</pre>
         <pre id="memory">no memory dump</pre>
         <pre id="processes">no process info</pre>
     </div>
     <div id="right">
-        <div id="memory-raw">no memory dump</div>
+        <div style="display:none" id="memory-raw">no memory dump</div>
+        <canvas id="display" width="512" height="512"></canvas>
     </div>
     <div id="toolbar">
         <input type=button value="step" onclick="run_cycle()">
