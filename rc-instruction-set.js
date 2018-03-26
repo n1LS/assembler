@@ -1,5 +1,9 @@
 class Opcode {
 
+    static from_code(code) {
+        return __op_from_code.get(code)
+    }
+
     constructor(name, short_name, id, num_params, forks, a_modes, b_modes, implementation) {
         this.opcode = id
         this.num_params = num_params
@@ -26,14 +30,16 @@ class Opcode {
 
         if (this.num_params > 0) {
             if ((a.mode & this.a_modes) == 0) {
-                console.log('Invalid op code / address mode combination in A operand')
+                console.log('Invalid op code / address mode ' +
+                    'combination in A operand')
                 return false
             }
         }
 
         if (this.num_params > 1) {
             if ((b.mode & this.b_modes) == 0) {
-                console.log(`Invalid op code / address mode combination in B operand ${this.name} B: ${address_mode_name(b.mode)}`)
+                console.log(`Invalid op code / address mode combination in B ` +
+                    `operand ${this.name} B: ${address_mode_name(b.mode)}`)
                 return false
             }
         }
@@ -41,63 +47,60 @@ class Opcode {
         return true
     }
 
-    static op_from_code(code) {
-        // TODO replace with static opcode->op map
-        for (var o = 0; o < opcodes.length; o++) {
-            if (opcodes[o].opcode == code) {
-                return opcodes[o]
-            }
-        }
-
-        return null
-    }
-
     /* opcode instruction implementation **************************************/
 
-    MOV(instruction, address, core) {
-        // console.log(`${address}: MOV ${instruction.a.mode}-${instruction.a.value} ${instruction.b.mode}-${instruction.b.value}`)
-        // console.log(`  ${instruction.a.pointer} -> ${instruction.b.pointer}`)
-        
+    MOV(instruction, address, ram) {
         if (instruction.a.mode == addr_immediate) {
             // write a-val to b-target
-            core.memory[instruction.b.pointer].b.value = instruction.a.value
+            const dst = instruction.b.pointer
+            const ins = ram.r(dst)
+            ins.b.value = instruction.a.value
+            ram.write(dst)
         }
         else {
             // copy entire instruction
-            core.memory[instruction.b.pointer] = core.memory[instruction.a.pointer].copy()
+            const ins = ram.r(instruction.a.pointer).copy()
+            ram.w(instruction.b.pointer, ins)
         }
         
         return 1
     }
 
-    ADD(instruction, address, core) {
+    ADD(instruction, address, ram) {
         if (instruction.a.mode == addr_immediate) {
-            core.memory[instruction.b.pointer].b.value += instruction.a.value
+            const dst = instruction.b.pointer
+            const ins = ram.r(dst)
+            ins.b.value += instruction.a.value
+            ram.w(dst, ins)
         }
         else {
-            const src = core.memory[instruction.a.pointer]
-            const dst = core.memory[instruction.b.pointer]
+            const dst_address = instruction.b.pointer
+
+            const src = ram.r(instruction.a.pointer)
+            const dst = ram.r(dst_address)
             
-            dst.a.value = wrap(dst.a.value + src.a.value)
-            dst.b.value = wrap(dst.b.value + src.b.value)
+            dst.a.value = ALU.normalize(dst.a.value + src.a.value)
+            dst.b.value = ALU.normalize(dst.b.value + src.b.value)
+
+            ram.w(dst_address, dst)
         }
         
         return 1
     }
 
-    JMP(instruction, address, core) {
+    JMP(instruction, address, ram) {
         return instruction.a.pointer - address
     }
 
-    DAT(instruction, address, core) {
+    DAT(instruction, address, ram) {
         return null
     }
 
-    NOP(instruction, address, core) {
+    NOP(instruction, address, ram) {
         return 1
     }
 
-    FRK(instruction, adress, core) {
+    FRK(instruction, adress, ram) {
         return instruction.a.pointer
     }    
 }
@@ -125,3 +128,5 @@ var opcodes = [
     new Opcode('SLT', 'S', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('DJN', 'D', DJN = 09, 1, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
 ]
+
+const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))

@@ -18,15 +18,15 @@ function address_mode_name(mode) {
     return '0'
 }
 
-// the ALU class is highly standard-specific, since it implements the memory 
-// address modes
+// the Control Unit class is highly standard-specific, since it implements the 
+// memory address modes
 
-class ALU {
+class ControlUnit {
     
         constructor() {
         }
 
-        pointer(value, address, memory) {
+        resolve(value, address, ram) {
             switch (value.mode) {
                 case addr_immediate:
                     return 0
@@ -35,20 +35,31 @@ class ALU {
                     return value.value
 
                 case addr_predecrement:
-                    var dst = wrap(value.value + address)
-                    memory[dst].b.value--
-                    return value.value + memory[dst].b.value
+                    var dst = ALU.normalize(value.value + address)
+                    var ins = ram.r(dst)
+                    ins.b.value--
+                    ram.w(dst, ins)
+
+                    return value.value + ram.r(dst).b.value
 
                 case addr_indirect:
-                    var dst = wrap(value.value + address)
-                    var ret = value.value + memory[dst].b.value
+                    var dst = ALU.normalize(value.value + address)
+                    var ret = value.value + ram.r(dst).b.value
+
                     return ret;
             }
         }
 
-        resolve(value, address, memory) {
-            var dst = this.pointer(value, address, memory)
-            return wrap(dst + address)
+        fetch(address, ram) {
+            var instruction = ram.r(address).copy()
+
+            var a_pointer = this.resolve(instruction.a, address, ram)
+            var b_pointer = this.resolve(instruction.b, address, ram)
+    
+            instruction.a.pointer = ALU.normalize(address + a_pointer)
+            instruction.b.pointer = ALU.normalize(address + b_pointer)
+            
+            return instruction;
         }
         
     }

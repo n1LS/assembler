@@ -31,7 +31,3 @@ function s2i(s) {
 
     return i
 }
-
-function wrap(i) {
-    return (kCORE_MEMORY_SIZE_UPPER + i) % kCORE_MEMORY_SIZE
-}

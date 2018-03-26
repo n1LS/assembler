@@ -50,7 +50,8 @@ class Assembler {
         const has = items.length - 1
         const should = opcode.num_params
         if (has < should) {
-            this.errors.push(`E004: Too few tokens (${has}/${should}) in '${bak}'`)
+            this.errors.push(
+                `E004: Too few tokens (${has}/${should}) in '${bak}'`)
             return null
         }
 
@@ -62,7 +63,8 @@ class Assembler {
             var v = parseInt(comp.substr(1, comp.length - 1))
 
             if (a == null) {
-                this.errors.push(`E005: Unknown address mode ${comp} in '${bak}'`)
+                this.errors.push(
+                    `E005: Unknown address mode ${comp} in '${bak}'`)
                 return null
             }
 
@@ -74,7 +76,8 @@ class Assembler {
         try {
             i = new Instruction(opcode.opcode, values[0], values[1])
         } catch (e) {
-            this.errors.push(`E008: Invalid opcode / address mode combination in '${bak}'`)
+            this.errors.push(
+                `E008: Invalid opcode / address mode combination in '${bak}'`)
         }
 
         return i

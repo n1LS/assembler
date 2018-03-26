@@ -1,37 +1,84 @@
-class Core {
+class ALU {
 
     constructor() {
-        this.alu = new ALU()
+
+    }
+
+    static normalize(address) {
+        return (kCORE_MEMORY_SIZE_UPPER + address) % kCORE_MEMORY_SIZE
+    }
+}
+
+Array.prototype.write = function(index, value) {
+    this[index] = value;
+  }
+  
+  Array.prototype.read = function(index, value) {
+    this[index] = value;
+  }
+  
+
+class RAM {
+
+    constructor() {
+        this.memory = new Array(kCORE_MEMORY_SIZE)
+        this.current_process_index = -1
         
-        this.current_process_index = 0
+        this.init_memory();
+    }
+
+    init_memory() {
+        
+        for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
+            this.memory[a] = new Instruction(DAT, null, null)
+        }
+    }
+
+    r(address) {
+        this.memory[address].read_flag = this.current_process_index
+        return this.memory[address]
+    }
+    
+    w(address, instruction) {
+        this.memory[address] = instruction
+        this.memory[address].write_flag = this.current_process_index
+    }
+    
+}
+
+class Core {
+    
+    constructor() {
+        this.cu = new ControlUnit()
+        this.ram = new RAM()
+        this.processes = new Array()
+        
+        this.set_current_process_index(0)
         this.cycle = 0
         this.active = true
 
-        this.init_memory()
-
-        this.processes = new Array()
 
         for (var i = 0; i < kNUM_PROGRAMS; i++) {
             this.processes.push(new Process())
         }
     }
 
-    init_memory() {
-        this.memory = new Array(kCORE_MEMORY_SIZE)
-
-        for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
-            this.memory[a] = new Instruction(DAT, null, null)
-        }
+    set_current_process_index(i) {
+        this.current_process_index = i
+        this.ram.current_process_index = i
     }
 
     load_program(program, process_id, address) {
+        this.ram.current_process_index = process_id
+
         for (var a = 0; a < program.instructions.length; a++) {
-            this.memory[a + address] = program.instructions[a]
-            this.memory[a + address].process_id = process_id
+            this.ram.w(a + address, program.instructions[a])
         }
 
         this.processes[process_id].pop_all()
         this.processes[process_id].push(address)
+
+        this.ram.current_process_index = this.current_process_index
     }
 
     current_process() {
@@ -48,33 +95,32 @@ class Core {
 
         // prepare next cycle process
 
-        this.current_process_index = (1 + this.current_process_index) % kNUM_PROGRAMS
+        this.set_current_process_index((1 + this.current_process_index) % kNUM_PROGRAMS)
 
         return this.active
     }
 
     step_instruction(address) {
-        // own the instruction
-        this.memory[address].process_id = this.current_process_index
+        // INSTRUCTION FETCH executes all pre/post-inc/decrements
+        const instruction = this.cu.fetch(address, this.ram)
         
-        // grab a copy of the instruction to cache it and prevent changes during
-        // execution
-        const instruction = this.memory[address].copy()
-        
-        // special handling for the for opcode that breaks protocol by spawning
-        // another thrad
+        // special handling for the for opcodes that spawn new threads
         if (instruction.forks) {
-            this.current_process().push(wrap(address + 1))
+            this.current_process().push(ALU.normalize(address + 1))
         }
+        
+        // INSTRUCTION EXECUTION returns the next program counter
+        this.ram.memory[address].execution_flag = this.current_process_index
+        var next_pc = instruction.execute(address, this.ram)
 
-        var next_address = instruction.execute(address, this)
+        if (next_pc != null) {
+            next_pc = ALU.normalize(address + next_pc)
 
-        if (next_address != null) {
-            next_address = wrap(address + next_address)
-
-            this.current_process().push(next_address)
+            this.current_process().push(next_pc)
         }
         else {
+            // instruction could not be executed and returned null
+            
             const id = this.current_process_index
             const active = this.current_process().num_threads()
 
@@ -106,11 +152,11 @@ class Core {
     /* UI IO stuff that kinda needs to be moved out of here *******************/
 
     next_instruction() {
-        return this.memory[this.current_process().next()]
+        return this.ram.memory[this.current_process().next()]
     }
 
     dump() {
-        return this.memory_dump(0, kCORE_MEMORY_SIZE, this.memory)
+        return this.memory_dump(0, kCORE_MEMORY_SIZE)
     }
 
     print_memory(start, end) {
@@ -131,12 +177,12 @@ class Core {
         var output = new Array()
 
         for (var a = start; a < end; a++) {
-            var i = this.memory[a]
-            var out = padln(a, 4) + '   ' + i.to_string()
+            var addr = ALU.normalize(a)
+            var i = this.ram.memory[addr]
+            var out = padln(addr, 4) + '   ' + i.to_string()
             output.push(out)
         }
 
         return output
     }
-
 }
