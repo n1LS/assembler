@@ -4,6 +4,10 @@ class Opcode {
         return __op_from_code.get(code)
     }
 
+    static from_name(code) {
+        return __op_from_name.get(code)
+    }
+
     constructor(name, short_name, id, num_params, forks, a_modes, b_modes, implementation) {
         this.opcode = id
         this.num_params = num_params
@@ -130,3 +134,4 @@ var opcodes = [
 ]
 
 const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))
+const __op_from_name = new Map(opcodes.map(op => [op.name, op]))

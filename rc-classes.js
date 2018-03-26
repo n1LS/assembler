@@ -3,7 +3,7 @@ class Program {
     constructor(code) {
         var preprocessor = new Preprocessor()
         var output = preprocessor.preprocess(code)
-        
+
         this.errors = output.errors;
         this.warnings = output.warnings;
         
@@ -22,6 +22,7 @@ class Program {
         }
         
         this.instructions = assembly.code
+        this.load_address = assembly.load_address
     }
 
 }

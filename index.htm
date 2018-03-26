@@ -1,9 +1,9 @@
 <html>
 
 <head>
-        <meta charset="utf-8"/>
-        <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
-        <style>
+    <meta charset="utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
+    <style>
         * {
             color: #f0f0f0;
             border: 0;
@@ -82,7 +82,7 @@
 
         #display {
             width: 100%;
-            height: calc(100% - 64px);
+            height: calc(100% - 32px);
         }
     </style>
 
@@ -95,41 +95,36 @@
     <script src="rc-classes.js"></script>
     <script src="rc-instruction.js"></script>
     <script src="rc-instruction-set.js"></script>
-    
+
     <script>
 
         var core
 
         var timer
-        
+
         function run() {
             stop()
             timer = setInterval(run_cycle, 20)
         }
-        
+
         function stop() {
             clearInterval(timer)
         }
-        
+
         function run_cycle() {
             core.step()
-            update()
-        }
-        
-        function dump_state() {
-            const pid = core.current_process_index
-            const next = core.current_process().next()
-            var dump = core.memory_dump(next - 5, next + 25).join("<br>")
-            document.getElementById("memory" + pid).innerHTML = "PROCESS " + pid + "\n\n" + dump
+            draw()
         }
 
         var memory = new Array(kCORE_MEMORY_SIZE)
 
+        const process_colors = ["#222222", "#f06020", "#2080f0"]
+
         function get_size(x, y, n) {
-            
+
             function bloat(a, b, n) {
                 var pa = Math.ceil(Math.sqrt(n * a / b))
-    
+
                 if (Math.floor(pa * b / a) * pa < n) {
                     return b / Math.ceil(pa * b / a)
                 } else {
@@ -139,38 +134,30 @@
 
             var sx = bloat(x, y, n)
             var sy = bloat(y, x, n)
-            
+
             return (sx > sy) ? sx : sy
         }
 
-        function draw() {
-            const canvas = document.getElementById("display")
+        function hash(instruction) {
+            return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
+        }
 
-            if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
-                canvas.width = canvas.clientWidth
-                canvas.height = canvas.clientHeight
-                memory = []
-            }
-
-            const ctx = canvas.getContext("2d")
-
-            const size = get_size(canvas.clientWidth, canvas.clientHeight, kCORE_MEMORY_SIZE)
-            const cols = Math.floor(canvas.clientWidth / size)
-            const rows = Math.floor(canvas.clientHeight / size)
-            
-            function hash(instruction) {
-                return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
-            }
+        function draw_memory(ctx, dx, dy, w, h) {
 
             function location(index) {
                 return { x: index % cols, y: Math.floor(index / cols) }
             }
 
+            const size = Math.min(get_size(w, h, kCORE_MEMORY_SIZE), row_height)
+            const cols = Math.floor(w / size)
+            const rows = Math.floor(h / size)
+
+            ctx.translate(dx, dy)
             ctx.scale(size, size)
 
             const numEntries = cols * rows
 
-            for (var i = 0; i < numEntries; i++)  {
+            for (var i = 0; i < numEntries; i++) {
                 const idx = i % kCORE_MEMORY_SIZE
                 const instruction = core.ram.memory[idx]
                 const i_hash = hash(instruction)
@@ -178,21 +165,21 @@
                 if (i_hash == memory[i]) {
                     continue;
                 }
-                
+
                 memory[i] = i_hash
 
                 var l = location(i)
                 const x = l.x
                 const y = l.y
 
-                ctx.fillStyle = ["#222222","#f06020", "#2080f0"][instruction.read_flag + 1]
+                ctx.fillStyle = process_colors[instruction.read_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x, y)
                 ctx.lineTo(x + 1, y)
                 ctx.lineTo(x, y + 1)
                 ctx.fill()
-                
-                ctx.fillStyle = ["#222222","#f06020", "#2080f0"][instruction.write_flag + 1]
+
+                ctx.fillStyle = process_colors[instruction.write_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x + 1, y)
                 ctx.lineTo(x + 1, y + 1)
@@ -200,42 +187,42 @@
                 ctx.fill()
 
                 var op = Opcode.from_code(instruction.opcode).name
-                
-                const A =  [0.2,0.2]
-                const B =  [0.5,0.2]
-                const C =  [0.8,0.2]
-                const D =  [0.2,0.5]
-                const E =  [0.5,0.5]
-                const F =  [0.8,0.5]
-                const G =  [0.2,0.8]
-                const H =  [0.5,0.8]
-                const I =  [0.8,0.8]
-                const J =  [0.3,0.3]
-                const K =  [0.7,0.3]
-                const L =  [0.3,0.7]
-                const M =  [0.7,0.7]
-                const N =  [0.5,0.35]
-                const O =  [0.65,0.5]
-                const P =  [0.5,0.65]
-                const Q =  [0.35,0.5]
-                
+
+                const A = [0.2, 0.2]
+                const B = [0.5, 0.2]
+                const C = [0.8, 0.2]
+                const D = [0.2, 0.5]
+                const E = [0.5, 0.5]
+                const F = [0.8, 0.5]
+                const G = [0.2, 0.8]
+                const H = [0.5, 0.8]
+                const I = [0.8, 0.8]
+                const J = [0.3, 0.3]
+                const K = [0.7, 0.3]
+                const L = [0.3, 0.7]
+                const M = [0.7, 0.7]
+                const N = [0.5, 0.35]
+                const O = [0.65, 0.5]
+                const P = [0.5, 0.65]
+                const Q = [0.35, 0.5]
+
                 const symbols = {
-                    'DAT': [A,B,K,F,M,H,G,A],
-                    'MOV': [G,A,E,C,I],
-                    'ADD': [D,F,E,B,H],
-                    'NOP': [G,A,I,C],
-                    'JMP': [C,F,M,H,G],
-                    'FRK': [G,D,E,D,A,C],
-                    'SUB': [D,F],
-                    'JMZ': [K,F,M,F,E,H,G,A,B,E],
-                    'JMN': [A,B,H,G,A,B,G,H,E,F,K,F,M,F],
-                    'CMP': [C,B,J,D,L,H,I],
-                    'SLT': [A,I,F,I,H],
-                    'DJN': [A,G,H,I,E],
+                    'DAT': [A, B, K, F, M, H, G, A],
+                    'MOV': [G, A, E, C, I],
+                    'ADD': [D, F, E, B, H],
+                    'NOP': [G, A, I, C],
+                    'JMP': [C, F, M, H, G],
+                    'FRK': [G, D, E, D, A, C],
+                    'SUB': [D, F],
+                    'JMZ': [K, F, M, F, E, H, G, A, B, E],
+                    'JMN': [A, B, H, G, A, B, G, H, E, F, K, F, M, F],
+                    'CMP': [C, B, J, D, L, H, I],
+                    'SLT': [A, I, F, I, H],
+                    'DJN': [A, G, H, I, E],
                     // TODO add missing opcodes
                 }
 
-                ctx.strokeStyle = ["#444444","#ffc080", "#80e0ff"][instruction.execution_flag + 1]
+                ctx.strokeStyle = ["#444444", "#ffc080", "#80e0ff"][instruction.execution_flag + 1]
                 ctx.lineWidth = 0.1
                 ctx.lineCap = "round"
                 const pts = symbols[op]
@@ -249,30 +236,80 @@
                 }
 
                 ctx.stroke()
-                
-
-
-                // ctx.fillText(characters[op], x + 1, y + 1 - 2);
 
                 if (i >= kCORE_MEMORY_SIZE) {
                     ctx.fillStyle = "rgba(0,0,0,0.5)"
                     ctx.fillRect(x, y, 1, 1)
                 }
             }
-            
+
             ctx.scale(1 / size, 1 / size)
+            ctx.translate(-dx, -dy)
+        }
+
+        const row_height = 14
+        const y_offs = row_height - 2
+        const font_name = row_height + "px Overpass Mono"
+
+        function draw_memory_dump(ctx, x, y, w, data, highlight) {
+            ctx.fillStyle = "#000000"
+            ctx.fillRect(x, y, w, row_height * data.length)
+
+            ctx.fillStyle = "#dddddd"
+
+            for (var i = 0; i < data.length; i++) {
+                ctx.fillStyle = (i == highlight) ? "#ffffff" : "#bbbbbb"
+                ctx.fillText(data[i], x, y + i * row_height + y_offs)
+            }
+
+            return row_height * data.length
+        }
+
+        function draw() {
+            const canvas = document.getElementById("display")
+            const ctx = canvas.getContext("2d")
+
+            if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
+                canvas.width = canvas.clientWidth
+                canvas.height = canvas.clientHeight
+                memory = []
+
+                ctx.fillStyle = "#000000"
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.font = font_name
+
+            var dx = 200            
+            var dy = 0
+            
+            ctx.fillStyle = "#000000"
+            ctx.fillRect(0, 0, dx, canvas.height);
+
+            for (var pid = 0; pid < 2; pid++) {
+                const next = core.processes[pid].next()
+                ctx.fillStyle = process_colors[pid + 1]
+                ctx.fillText(`PROCESS ${pid}`, 0, dy + y_offs)
+                dy += row_height
+                dy += row_height + draw_memory_dump(ctx, 0, dy, dx, core.memory_dump(next - 10, next + 10), 10)
+            }
+
+            ctx.fillStyle = "#80f020"
+            ctx.fillText(`NEXT   ${core.next_instruction().to_string()}`, 0, dy + y_offs)
+
+            draw_memory(ctx, dx, 0, canvas.width - dx, canvas.height)
         }
 
         function init_everything() {
             core = new Core()
-            
+
             var code1 =
                 "; imp\n" +
                 "imp mov 0 next\n" +
                 "next dat 0 0";
 
             var code2 =
-`
+                `
 ; dwarf
  org jump
  add #4, 3
@@ -281,13 +318,13 @@ JUMP jmp -2
 dummy dat #42 #0
 `
 
-            var code3 = 
+            var code3 =
                 "; stone \n" +
-                " mov <2, 3\n" + 
-                " add 3, -1\n" + 
-                " jmp -2\n" + 
-                " dat #0 #0\n" + 
-                " dat #-5084, #5084" + 
+                " mov <2, 3\n" +
+                " add 3, -1\n" +
+                " jmp -2\n" +
+                " dat #0 #0\n" +
+                " dat #-5084, #5084" +
                 " DAT 0 0\n" +
                 " MOV 0 0\n" +
                 " ADD 0 0\n" +
@@ -303,29 +340,12 @@ dummy dat #42 #0
                 " NOP 0 0\n"
 
             // init both prpgrams
-            
+
             var p1 = new Program(code2)
             core.load_program(p1, 0, 2000)
 
             var p2 = new Program(code3)
             core.load_program(p2, 1, 0)
-
-            update()
-        }
-
-        function update() {
-            dump_state()
-
-            document.getElementById("instruction").innerHTML = "NEXT   " + core.next_instruction().to_string()
-
-            var processes = core.processes
-            var proc = processes.length + " process(es)<br><br>"
-
-            for (var p = 0; p < processes.length; p++) {
-                proc += `Process ${p}:<br>` + processes[p].instruction_pointers.join("<br>") + "<br>"
-            }
-
-            document.getElementById("processes").innerHTML = proc;
 
             draw()
         }
@@ -335,15 +355,8 @@ dummy dat #42 #0
 </head>
 
 <body onload="init_everything()" onresize="draw()">
-    <div id="left">
-        <pre id="instruction">no instruction</pre>
-        <pre id="memory0">no memory dump</pre>
-        <pre id="memory1">no memory dump</pre>
-        <pre id="processes">no process info</pre>
-    </div>
-    <div id="right">
-        <canvas id="display" width="512" height="512"></canvas>
-    </div>
+    <canvas id="display" width="512" height="512"></canvas>
+    
     <div id="toolbar">
         <input type=button value="step" onclick="run_cycle()">
         <input type=button value="dump" onclick="dump_state()">

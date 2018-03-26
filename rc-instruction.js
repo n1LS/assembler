@@ -13,7 +13,7 @@ class Instruction {
         const op = Opcode.from_code(this.opcode)
 
         if (!op.operands_valid(this.a, this.b)) {
-            console.log('Invalid openrands. Cannot create instruction!')
+            console.log('Invalid operands. Cannot create instruction!')
             throw 'InstructionInvalidError';
         }        
     }
