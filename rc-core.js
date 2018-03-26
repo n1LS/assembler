@@ -76,7 +76,7 @@ class Core {
         }
 
         this.processes[process_id].pop_all()
-        this.processes[process_id].push(address)
+        this.processes[process_id].push(address  + program.load_address)
 
         this.ram.current_process_index = this.current_process_index
     }

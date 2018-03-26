@@ -3,7 +3,6 @@
 <head>
         <meta charset="utf-8"/>
         <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
-        <link href="https://www.schickt.de/fonts/icon.css" rel="stylesheet">
         <style>
         * {
             color: #f0f0f0;
@@ -96,6 +95,7 @@
     <script src="rc-classes.js"></script>
     <script src="rc-instruction.js"></script>
     <script src="rc-instruction-set.js"></script>
+    
     <script>
 
         var core
@@ -125,6 +125,24 @@
 
         var memory = new Array(kCORE_MEMORY_SIZE)
 
+        function get_size(x, y, n) {
+            
+            function bloat(a, b, n) {
+                var pa = Math.ceil(Math.sqrt(n * a / b))
+    
+                if (Math.floor(pa * b / a) * pa < n) {
+                    return b / Math.ceil(pa * b / a)
+                } else {
+                    return a / pa
+                }
+            }
+
+            var sx = bloat(x, y, n)
+            var sy = bloat(y, x, n)
+            
+            return (sx > sy) ? sx : sy
+        }
+
         function draw() {
             const canvas = document.getElementById("display")
 
@@ -134,15 +152,12 @@
                 memory = []
             }
 
-            const spacing = 0
-
             const ctx = canvas.getContext("2d")
-            
-            const size = Math.floor(Math.sqrt((canvas.clientHeight * canvas.clientWidth) / kCORE_MEMORY_SIZE) - spacing)
+
+            const size = get_size(canvas.clientWidth, canvas.clientHeight, kCORE_MEMORY_SIZE)
             const cols = Math.floor(canvas.clientWidth / size)
             const rows = Math.floor(canvas.clientHeight / size)
             
-            console.log("size = " + cols + ":" + rows)
             function hash(instruction) {
                 return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
             }
@@ -170,15 +185,14 @@
                 const x = l.x
                 const y = l.y
 
-
-                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][instruction.read_flag + 1]
+                ctx.fillStyle = ["#222222","#f06020", "#2080f0"][instruction.read_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x, y)
                 ctx.lineTo(x + 1, y)
                 ctx.lineTo(x, y + 1)
                 ctx.fill()
                 
-                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][0] // instruction.write_flag + 1]
+                ctx.fillStyle = ["#222222","#f06020", "#2080f0"][instruction.write_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x + 1, y)
                 ctx.lineTo(x + 1, y + 1)
@@ -208,19 +222,20 @@
                 const symbols = {
                     'DAT': [A,B,K,F,M,H,G,A],
                     'MOV': [G,A,E,C,I],
-                    'ADD': [G,B,I,O,Q],
+                    'ADD': [D,F,E,B,H],
                     'NOP': [G,A,I,C],
                     'JMP': [C,F,M,H,G],
                     'FRK': [G,D,E,D,A,C],
-                    'SUB': [C,A,D,F,I,G],
+                    'SUB': [D,F],
                     'JMZ': [K,F,M,F,E,H,G,A,B,E],
                     'JMN': [A,B,H,G,A,B,G,H,E,F,K,F,M,F],
                     'CMP': [C,B,J,D,L,H,I],
                     'SLT': [A,I,F,I,H],
                     'DJN': [A,G,H,I,E],
+                    // TODO add missing opcodes
                 }
 
-                ctx.strokeStyle = ["#606060","#ffc080", "#80e0ff"][instruction.execution_flag + 1]
+                ctx.strokeStyle = ["#444444","#ffc080", "#80e0ff"][instruction.execution_flag + 1]
                 ctx.lineWidth = 0.1
                 ctx.lineCap = "round"
                 const pts = symbols[op]
@@ -257,11 +272,14 @@
                 "next dat 0 0";
 
             var code2 =
-                "; dwarf\n" +
-                " add #4, 3\n" +
-                " mov 2, @2\n" +
-                " jmp -2\n" +
-                "dummy dat #42 #0";
+`
+; dwarf
+ org jump
+ add #4, 3
+ mov 2, @2
+JUMP jmp -2
+dummy dat #42 #0
+`
 
             var code3 = 
                 "; stone \n" +
