@@ -25,7 +25,8 @@
             color: greenyellow;
         }
 
-        #memory {
+        #memory0,
+        #memory1 {
             background: #202020;
         }
 
@@ -95,15 +96,15 @@
     <script src="rc-core.js"></script>
     <script src="rc-instruction.js"></script>
     <script src="rc-instruction-set.js"></script>
-    <script src="rc.js"></script>
-    
     <script>
-        
+
+        var core
+
         var timer
         
         function run() {
             stop()
-            timer = setInterval(run_cycle, 20)
+            timer = setInterval(run_cycle, 25)
         }
         
         function stop() {
@@ -112,64 +113,34 @@
         
         function run_cycle() {
             core.step()
-            dump_state()
+            update()
         }
-
+        
         function dump_state() {
-            var last = Math.min(kCORE_MEMORY_SIZE, 40)
-            var dump = core.memory_dump(0, last).join("<br>")
-            document.getElementById("memory").innerHTML = dump
-            document.getElementById("instruction").innerHTML = "NEXT   " + core.next_instruction().to_string()
-
-            var processes = core.processes
-            var proc = processes.length + " process(es)<br><br>"
-
-            for (var p = 0; p < processes.length; p++) {
-                proc += `Process ${p}:<br>` + processes[p].instruction_pointers.join("<br>") + "<br>"
-            }
-
-            document.getElementById("processes").innerHTML = proc;
-
-            var mem = core.memory
-            const colors = {
-                '-1': "O",
-                '0': "A",
-                '1': "B"
-            }
-
-            var last_process = core.memory[0].process_id
-            var dmp = "<span class='" + colors[last_process] + "'>"
-
-            for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
-                var i = core.memory[a]
-                var op = Opcode.op_from_code(i.opcode).short_name
-
-                if (i.process_id != last_process) {
-                    last_process = i.process_id
-                    var c = colors[i.process_id]
-                    dmp += "</span><span class='" + c + "'>"
-                }
-
-                dmp += op
-            }
-
-            dmp += "</span>"
-
-            document.getElementById("memory-raw").innerHTML = dmp;
-
-            draw()
+            const pid = core.current_process_index
+            const next = core.current_process().next()
+            var dump = core.memory_dump(next - 5, next + 25).join("<br>")
+            document.getElementById("memory" + pid).innerHTML = "PROCESS " + pid + "\n\n" + dump
         }
+
+        var memory = new Array(kCORE_MEMORY_SIZE)
 
         function draw() {
             const canvas = document.getElementById("display")
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+            if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
+                canvas.width = canvas.clientWidth
+                canvas.height = canvas.clientHeight
+            }
+
+            const spacing = 0
 
             const ctx = canvas.getContext("2d")
-            const size = Math.floor(Math.sqrt((canvas.clientHeight * canvas.clientWidth) / kCORE_MEMORY_SIZE) - 1);
+            const size = Math.floor(Math.sqrt((canvas.clientHeight * canvas.clientWidth) / kCORE_MEMORY_SIZE) - spacing)
             const cols = Math.floor(canvas.clientWidth / size)
 
-            ctx.clearRect(0, 0, canvas.width, canvas.width)
+            function hash(instruction) {
+                return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
+            }
 
             function location(index) {
                 return { x: index % cols, y: Math.floor(index / cols) }
@@ -178,15 +149,35 @@
             ctx.font = `${size * 0.85}px Icon`;
 
             for (var i = 0; i < kCORE_MEMORY_SIZE; i++)  {
+                const instruction = core.ram.memory[i]
+                const i_hash = hash(instruction)
+
+                if (i_hash == memory[i]) {
+                    continue;
+                }
+                
+                memory[i] = i_hash
+
                 var l = location(i)
-                const x = l.x * (1 + size)
-                const y = l.y * (1 + size)
+                const x = l.x * (spacing + size)
+                const y = l.y * (spacing + size)
 
-                const instruction = core.memory[i]
 
-                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][instruction.process_id + 1]
-                ctx.fillRect(x, y, size, size)
-                var op = Opcode.op_from_code(instruction.opcode).name
+                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][instruction.read_flag + 1]
+                ctx.beginPath()
+                ctx.moveTo(x, y)
+                ctx.lineTo(x + size, y)
+                ctx.lineTo(x, y + size)
+                ctx.fill()
+                
+                ctx.fillStyle = ["#333333","#f06020", "#2080f0"][instruction.write_flag + 1]
+                ctx.beginPath()
+                ctx.moveTo(x + size, y)
+                ctx.lineTo(x + size, y + size)
+                ctx.lineTo(x, y + size)
+                ctx.fill()
+
+                var op = Opcode.from_code(instruction.opcode).name
                 
                 const characters = {
                     'DAT': '\uf0aa',
@@ -203,13 +194,15 @@
                     'DJN': '\uf000',
                 }
 
-                ctx.fillStyle = ["#606060","#ffc080", "#80e0ff"][instruction.process_id + 1]
+                ctx.fillStyle = ["#606060","#ffc080", "#80e0ff"][instruction.execution_flag + 1]
                 ctx.fillText(characters[op], x + 1, y + size - 2);
             }
            
         }
 
         function init_everything() {
+            core = new Core()
+            
             var code1 =
                 "; imp\n" +
                 "imp mov 0 next\n" +
@@ -238,7 +231,23 @@
             var p2 = new Program(code3)
             core.load_program(p2, 1, 0)
 
+            update()
+        }
+
+        function update() {
             dump_state()
+
+            document.getElementById("instruction").innerHTML = "NEXT   " + core.next_instruction().to_string()
+
+            var processes = core.processes
+            var proc = processes.length + " process(es)<br><br>"
+
+            for (var p = 0; p < processes.length; p++) {
+                proc += `Process ${p}:<br>` + processes[p].instruction_pointers.join("<br>") + "<br>"
+            }
+
+            document.getElementById("processes").innerHTML = proc;
+
             draw()
         }
 
@@ -249,7 +258,8 @@
 <body onload="init_everything()" onresize="draw()">
     <div id="left">
         <pre id="instruction">no instruction</pre>
-        <pre id="memory">no memory dump</pre>
+        <pre id="memory0">no memory dump</pre>
+        <pre id="memory1">no memory dump</pre>
         <pre id="processes">no process info</pre>
     </div>
     <div id="right">
