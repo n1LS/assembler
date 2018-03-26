@@ -12,16 +12,31 @@ var core = new Core()
 
 // load first program
 
-var code_1 = ' ADD #4, 3\n' +
-             ' MOV 2, @2\n' + 
-             ' JMP -2'
+var code_1 = 
+`; dwarf 
+ ADD #4, 3
+ MOV 2, @2
+ JMP -2
+`
 var program_1 = new Program(code_1)
 
 core.load_program(program_1, 0, 4000)
 
 // load second program
 
-var code_2 = ' mov 0 1'
+var code_2 = 
+`; stone
+    MOV <2, 3        
+    ADD 3, -1
+    JMP -2, 0
+    DAT #0, #0
+    DAT #-5084, #5084
+`
+/*
+` ; imp
+ mov 0 1
+`
+*/
 var program_2 = new Program(code_2)
 
 core.load_program(program_2, 1, 0)
