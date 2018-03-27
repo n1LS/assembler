@@ -2,15 +2,10 @@
 
 <head>
     <meta charset="utf-8" />
-    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
     <style>
         * {
             color: #f0f0f0;
             border: 0;
-            font-weight: lighter;
-            font-family: 'Overpass Mono', monospace;
-            font-size: 11px;
-            line-height: 90%;
         }
 
         input {
@@ -82,7 +77,7 @@
 
         #display {
             width: 100%;
-            height: calc(100% - 32px);
+            height: 100%;
         }
     </style>
 
@@ -96,11 +91,14 @@
     <script src="rc-instruction.js"></script>
     <script src="rc-instruction-set.js"></script>
 
+    <script src="canvas-font.js"></script>
+
     <script>
 
         var core
-
         var timer
+        var buttons
+        var scale = 1.5
 
         function run() {
             stop()
@@ -119,24 +117,7 @@
         var memory = new Array(kCORE_MEMORY_SIZE)
 
         const process_colors = ["#222222", "#f06020", "#2080f0"]
-
-        function get_size(x, y, n) {
-
-            function bloat(a, b, n) {
-                var pa = Math.ceil(Math.sqrt(n * a / b))
-
-                if (Math.floor(pa * b / a) * pa < n) {
-                    return b / Math.ceil(pa * b / a)
-                } else {
-                    return a / pa
-                }
-            }
-
-            var sx = bloat(x, y, n)
-            var sy = bloat(y, x, n)
-
-            return (sx > sy) ? sx : sy
-        }
+        const process_text_colors = ["#444444", "#ffc080", "#80e0ff"]
 
         function hash(instruction) {
             return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
@@ -148,12 +129,11 @@
                 return { x: index % cols, y: Math.floor(index / cols) }
             }
 
-            const size = Math.min(get_size(w, h, kCORE_MEMORY_SIZE), row_height)
+            const size = row_height
             const cols = Math.floor(w / size)
             const rows = Math.floor(h / size)
 
             ctx.translate(dx, dy)
-            ctx.scale(size, size)
 
             const numEntries = cols * rows
 
@@ -169,107 +149,101 @@
                 memory[i] = i_hash
 
                 var l = location(i)
-                const x = l.x
-                const y = l.y
+                const x = l.x * size
+                const y = l.y * size
 
                 ctx.fillStyle = process_colors[instruction.read_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x, y)
-                ctx.lineTo(x + 1, y)
-                ctx.lineTo(x, y + 1)
+                ctx.lineTo(x + size, y)
+                ctx.lineTo(x, y + size)
                 ctx.fill()
 
                 ctx.fillStyle = process_colors[instruction.write_flag + 1]
                 ctx.beginPath()
-                ctx.moveTo(x + 1, y)
-                ctx.lineTo(x + 1, y + 1)
-                ctx.lineTo(x, y + 1)
+                ctx.moveTo(x + size, y)
+                ctx.lineTo(x + size, y + size)
+                ctx.lineTo(x, y + size)
                 ctx.fill()
+                
+                const op = Opcode.from_code(instruction.opcode)
+                const symbol = {
+                    'MOV': 0, 'DAT': 1, 'ADD': 5, 'JMP': 2, 
+                    'SUB': 6, 'JMZ': 7, 'NOP': 3, 'FRK': 4, 
+                    'JNZ': 8, 'CMP': 8,  
+                    
+                }[op.name]
 
-                var op = Opcode.from_code(instruction.opcode).name
-
-                const A = [0.2, 0.2]
-                const B = [0.5, 0.2]
-                const C = [0.8, 0.2]
-                const D = [0.2, 0.5]
-                const E = [0.5, 0.5]
-                const F = [0.8, 0.5]
-                const G = [0.2, 0.8]
-                const H = [0.5, 0.8]
-                const I = [0.8, 0.8]
-                const J = [0.3, 0.3]
-                const K = [0.7, 0.3]
-                const L = [0.3, 0.7]
-                const M = [0.7, 0.7]
-                const N = [0.5, 0.35]
-                const O = [0.65, 0.5]
-                const P = [0.5, 0.65]
-                const Q = [0.35, 0.5]
-
-                const symbols = {
-                    'DAT': [A, B, K, F, M, H, G, A],
-                    'MOV': [G, A, E, C, I],
-                    'ADD': [D, F, E, B, H],
-                    'NOP': [G, A, I, C],
-                    'JMP': [C, F, M, H, G],
-                    'FRK': [G, D, E, D, A, C],
-                    'SUB': [D, F],
-                    'JMZ': [K, F, M, F, E, H, G, A, B, E],
-                    'JMN': [A, B, H, G, A, B, G, H, E, F, K, F, M, F],
-                    'CMP': [C, B, J, D, L, H, I],
-                    'SLT': [A, I, F, I, H],
-                    'DJN': [A, G, H, I, E],
-                    // TODO add missing opcodes
-                }
-
-                ctx.strokeStyle = ["#444444", "#ffc080", "#80e0ff"][instruction.execution_flag + 1]
-                ctx.lineWidth = 0.1
-                ctx.lineCap = "round"
-                const pts = symbols[op]
-
-                ctx.beginPath()
-                ctx.moveTo(x + pts[0][0], y + pts[0][1])
-
-                for (var p = 1; p < pts.length; p++) {
-                    pt = pts[p];
-                    ctx.lineTo(x + pt[0], y + pt[1]);
-                }
-
-                ctx.stroke()
+                ctx.fillStyle = process_text_colors[instruction.execution_flag + 1]
+                draw_symbol(ctx, x, y, symbol)
 
                 if (i >= kCORE_MEMORY_SIZE) {
                     ctx.fillStyle = "rgba(0,0,0,0.5)"
-                    ctx.fillRect(x, y, 1, 1)
+                    ctx.fillRect(x, y, size, size)
                 }
             }
 
-            ctx.scale(1 / size, 1 / size)
             ctx.translate(-dx, -dy)
         }
-
-        const row_height = 14
-        const y_offs = row_height - 2
-        const font_name = row_height + "px Overpass Mono"
 
         function draw_memory_dump(ctx, x, y, w, data, highlight) {
             ctx.fillStyle = "#000000"
             ctx.fillRect(x, y, w, row_height * data.length)
 
-            ctx.fillStyle = "#dddddd"
+            ctx.fillStyle = "#404040"
+            ctx.fillRect(x, y + highlight * row_height, w, row_height)
 
             for (var i = 0; i < data.length; i++) {
                 ctx.fillStyle = (i == highlight) ? "#ffffff" : "#bbbbbb"
-                ctx.fillText(data[i], x, y + i * row_height + y_offs)
+                draw_text(ctx, x, y + i * row_height, data[i])
             }
 
             return row_height * data.length
         }
 
-        function draw() {
+        function draw_frame(ctx, x, y, w, h) {
+            h -= 1
+            w -= 1
+            draw_symbol(ctx, x, y, 128)
+            draw_symbol(ctx, x + w * row_height, y, 130)
+            draw_symbol(ctx, x + w * row_height, y + h * row_height, 133)
+            draw_symbol(ctx, x, y + h * row_height, 131)
+
+            for (var dx = 1; dx < w; dx++) {
+                draw_symbol(ctx, x + dx * row_height, y, 129)
+                draw_symbol(ctx, x + dx * row_height, y + h * row_height, 132)
+            }
+
+            for (var dy = 1; dy < h; dy++) {
+                var ddy = y + dy * row_height
+                draw_symbol(ctx, x, ddy, 134)
+                draw_symbol(ctx, x + w * row_height, ddy, 135)
+            }
+        }
+
+        function draw_button(ctx, x, y, w, text) {
+            ctx.fillStyle = "#808080"
+            draw_frame(ctx, x, y, w, 3)
+            
+            ctx.fillStyle = "#ffffff"
+            draw_text(ctx, x + row_height * (w - text.length) / 2, y + row_height, text)
+
+            var rect = {x1: x * scale, y1: y * scale, x2: x + w * row_height, y2: y + 3 * row_height}
+            rect.x2 *= scale
+            rect.y2 *= scale
+
+            return rect
+        }
+
+        function draw(redraw) {
+            if (redraw === undefined) {
+                redraw = false
+            }
+
             const canvas = document.getElementById("display")
             const ctx = canvas.getContext("2d")
 
-            if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
+            if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight || redraw) {
                 canvas.width = canvas.clientWidth
                 canvas.height = canvas.clientHeight
                 memory = []
@@ -278,35 +252,84 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            ctx.font = font_name
+            ctx.scale(scale, scale)
 
-            var dx = 200            
+            var width = canvas.width / scale
+            var height = canvas.height / scale
+            
+            var dx = row_height * 25
             var dy = 0
             
             ctx.fillStyle = "#000000"
-            ctx.fillRect(0, 0, dx, canvas.height);
+            ctx.fillRect(0, 0, dx, height);
 
             for (var pid = 0; pid < 2; pid++) {
                 const next = core.processes[pid].next()
                 ctx.fillStyle = process_colors[pid + 1]
-                ctx.fillText(`PROCESS ${pid}`, 0, dy + y_offs)
+                draw_text(ctx, 0, dy, `PROCESS ${pid}`)
+
                 dy += row_height
                 dy += row_height + draw_memory_dump(ctx, 0, dy, dx, core.memory_dump(next - 10, next + 10), 10)
             }
 
             ctx.fillStyle = "#80f020"
-            ctx.fillText(`NEXT   ${core.next_instruction().to_string()}`, 0, dy + y_offs)
+            draw_text(ctx, 0, dy, `NEXT   ${core.next_instruction().to_string()}`)
 
-            draw_memory(ctx, dx, 0, canvas.width - dx, canvas.height)
+            draw_memory(ctx, dx, 0, width - dx, height - 3 * row_height)
+            
+            // ui buttons
+            buttons = []
+            var b
+
+            b = draw_button(ctx, 0, height - 3 * row_height, 10, 'STEP')
+            b.doit = run_cycle
+            buttons.push(b)
+
+            b = draw_button(ctx, 11 * row_height, height - 3 * row_height, 10, 'RUN')
+            b.doit = run
+            buttons.push(b)
+
+            b = draw_button(ctx, 22 * row_height, height - 3 * row_height, 10, 'STOP')
+            b.doit = stop
+            buttons.push(b)
+
+            b = draw_button(ctx, 33 * row_height, height - 3 * row_height, 5, '-')
+            b.doit = function() { set_size(-1) }
+            buttons.push(b)
+
+            b = draw_button(ctx, 39 * row_height, height - 3 * row_height, 5, '+')
+            b.doit = function() { set_size(+1) }
+            buttons.push(b)
+            
+            ctx.scale(1 / scale, 1 / scale)
+
+            // UI handler
+
+            canvas.onclick = function(e) {
+                var x = e.clientX
+                var y = e.clientY
+
+                for (var b = 0; b < buttons.length; b++) {
+                    const btn = buttons[b]
+
+                    if ((x >= btn.x1) && (y >= btn.y1) && (btn.x2 >= x) && (btn.y2 >= y)) {
+                        btn.doit();
+                        return;
+                    }
+                }
+            }
+
         }
 
         function init_everything() {
             core = new Core()
 
             var code1 =
-                "; imp\n" +
-                "imp mov 0 next\n" +
-                "next dat 0 0";
+`
+; imp
+imp mov 0 next
+next dat 0 0
+`
 
             var code2 =
                 `
@@ -319,35 +342,55 @@ dummy dat #42 #0
 `
 
             var code3 =
-                "; stone \n" +
-                " mov <2, 3\n" +
-                " add 3, -1\n" +
-                " jmp -2\n" +
-                " dat #0 #0\n" +
-                " dat #-5084, #5084" +
-                " DAT 0 0\n" +
-                " MOV 0 0\n" +
-                " ADD 0 0\n" +
-                " NOP 0 0\n" +
-                " JMP 0 0\n" +
-                " FRK 0 0\n" +
-                " SUB 0 0\n" +
-                " JMZ 0 0\n" +
-                " JMN 0 0\n" +
-                " CMP 0 0\n" +
-                " SLT 0 0\n" +
-                " DJN 0 0\n" +
-                " NOP 0 0\n"
+`
+; stone
+ mov <2, 3
+ add 3, -1
+ jmp -2
+ dat #0 #0
+ dat #-5084, #5084
+ DAT 0 0
+ MOV 0 0
+ ADD 0 0
+ NOP 0 0
+ JMP 0 0
+ FRK 0 0
+ SUB 0 0
+ JMZ 0 0
+ JMN 0 0
+ CMP 0 0
+ SLT 0 0
+ DJN 0 0
+ NOP 0 0
+`
+            var code4 =
+`
+; mice
+        org     start
+ptr     dat     #0,  #0
+start   mov     #12,  ptr
+loop    mov     @ptr,  <copy
+        djn     loop,  ptr
+        spl     @copy,  0
+        add     #653,  copy
+        jmz     start,  ptr
+copy    dat     #0,  #833
+`
 
             // init both prpgrams
 
             var p1 = new Program(code2)
             core.load_program(p1, 0, 2000)
 
-            var p2 = new Program(code3)
+            var p2 = new Program(code4)
             core.load_program(p2, 1, 0)
 
             draw()
+        }
+
+        function set_size(diff) {
+            scale = Math.max(0.5, scale + diff / 2)
+            draw(true)
         }
 
     </script>
@@ -355,15 +398,17 @@ dummy dat #42 #0
 </head>
 
 <body onload="init_everything()" onresize="draw()">
-    <canvas id="display" width="512" height="512"></canvas>
-    
+    <canvas id="display"></canvas>
+    <!--
     <div id="toolbar">
         <input type=button value="step" onclick="run_cycle()">
         <input type=button value="dump" onclick="dump_state()">
         <input type=button value="run" onclick="run()">
         <input type=button value="stop" onclick="stop()">
+        <input type=button value="-" onclick="set_size(-1)">
+        <input type=button value="+" onclick="set_size(+1)">
     </div>
-
+    -->
 </body>
 
 </html>

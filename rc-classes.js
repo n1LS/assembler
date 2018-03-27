@@ -35,6 +35,10 @@ class Value {
         this.pointer = 0
     }
 
+    copy() {
+        return new Value(this.value, this.mode)
+    }
+
 }
 
 class Process {

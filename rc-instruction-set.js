@@ -56,10 +56,10 @@ class Opcode {
     MOV(instruction, address, ram) {
         if (instruction.a.mode == addr_immediate) {
             // write a-val to b-target
-            const dst = instruction.b.pointer
-            const ins = ram.r(dst)
-            ins.b.value = instruction.a.value
-            ram.write(dst)
+            const dst_address = instruction.b.pointer
+            const dst = ram.r(dst_address)
+            dst.b.value = instruction.a.value
+            ram.w(dst_address, dst)
         }
         else {
             // copy entire instruction
@@ -104,9 +104,30 @@ class Opcode {
         return 1
     }
 
-    FRK(instruction, adress, ram) {
+    FRK(instruction, address, ram) {
         return instruction.a.pointer
     }    
+
+    DJN(instruction, address, ram) {
+        const dst_address = instruction.b.pointer
+        const dst = ram.r(dst_address)
+        dst.b.value--
+        ram.w(dst_address, dst)
+
+        return (dst.b.value != 0) ? (instruction.a.pointer - address) : 1
+    }
+
+    JMZ(instruction, address, ram) {
+        const dst = ram.r(instruction.b.pointer)
+
+        return (dst.b.value == 0) ? (instruction.a.pointer - address) : 1
+    }
+
+    JMN(instruction, address, ram) {
+        const dst = ram.r(instruction.b.pointer)
+
+        return (dst.b.value != 0) ? (instruction.a.pointer - address) : 1
+    }
 }
 
 var opcodes = [
@@ -124,13 +145,13 @@ var opcodes = [
     new Opcode('NOP', 'O', NOP = 11, 0, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('JMP', 'J', JMP = 04, 1, false, 0b00001111, 0b00001011, Opcode.prototype.JMP ),
     new Opcode('FRK', 'F', FRK = 94, 1, true,  0b00001111, 0b00001011, Opcode.prototype.FRK ),
+    new Opcode('DJN', 'D', DJN = 09, 1, false, 0b00001111, 0b00001011, Opcode.prototype.DJN ),
+    new Opcode('JMZ', 'Z', JMZ = 49, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMZ ),
+    new Opcode('JMN', 'N', JMN = 33, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMN ),
     
     new Opcode('SUB', 'S', SUB = 75, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
-    new Opcode('JMZ', 'Z', JMZ = 49, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
-    new Opcode('JMN', 'N', JMN = 33, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('SLT', 'S', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
-    new Opcode('DJN', 'D', DJN = 09, 1, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
 ]
 
 const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))
