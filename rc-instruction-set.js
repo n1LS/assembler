@@ -63,7 +63,9 @@ class Opcode {
         }
         else {
             // copy entire instruction
+// TEMP TODO: A POINTER IS WRONG?!            
             const ins = ram.r(instruction.a.pointer).copy()
+            console.log(address + ": " + instruction.to_string() + " >    " + instruction.a.pointer + " = " + ins.to_string())
             ram.w(instruction.b.pointer, ins)
         }
         
