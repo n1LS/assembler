@@ -99,6 +99,7 @@
         var timer
         var buttons
         var scale = 1.5
+        var cycles = 1
 
         function run() {
             stop()
@@ -110,20 +111,32 @@
         }
 
         function run_cycle() {
-            core.step()
+            for (var c = 0; c < cycles; c++) {
+                if (!core.step()) {
+                    stop();
+                    break;
+                }
+            }
+
             draw()
         }
+
+        function toggle_boost() {
+            cycles = cycles == 1 ? 1000 : 1
+        }        
 
         var memory = new Array(kCORE_MEMORY_SIZE)
 
         const process_colors = ["#222222", "#f06020", "#2080f0"]
-        const process_text_colors = ["#444444", "#ffc080", "#80e0ff"]
+        const process_colors_low = ["#222222", "#a04020", "#2060b0"]
+        const process_text_colors = ["#808080", "#ffc080", "#80e0ff"]
 
         function hash(instruction) {
             return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
         }
 
         function draw_memory(ctx, dx, dy, w, h) {
+            const optimize = false
 
             function location(index) {
                 return { x: index % cols, y: Math.floor(index / cols) }
@@ -142,6 +155,10 @@
                 const instruction = core.ram.memory[idx]
                 const i_hash = hash(instruction)
 
+                if (i >= kCORE_MEMORY_SIZE && optimize) {
+                    break;
+                }
+
                 if (i_hash == memory[i]) {
                     continue;
                 }
@@ -152,27 +169,25 @@
                 const x = l.x * size
                 const y = l.y * size
 
-                ctx.fillStyle = process_colors[instruction.read_flag + 1]
+                ctx.fillStyle = process_colors_low[instruction.read_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x, y)
                 ctx.lineTo(x + size, y)
                 ctx.lineTo(x, y + size)
                 ctx.fill()
 
-                ctx.fillStyle = process_colors[instruction.write_flag + 1]
+                ctx.fillStyle = process_colors_low[instruction.write_flag + 1]
                 ctx.beginPath()
                 ctx.moveTo(x + size, y)
                 ctx.lineTo(x + size, y + size)
                 ctx.lineTo(x, y + size)
                 ctx.fill()
                 
-                const op = Opcode.from_code(instruction.opcode)
                 const symbol = {
-                    'MOV': 0, 'DAT': 1, 'ADD': 5, 'JMP': 2, 
-                    'SUB': 6, 'JMZ': 7, 'NOP': 3, 'FRK': 4, 
-                    'JNZ': 8, 'CMP': 8,  
-                    
-                }[op.name]
+                    'MOV': 0, 'DAT': 1, 'JMP': 2, 'NOP': 3, 'SPL': 4, 
+                    'ADD': 5, 'SUB': 6, 'JMZ': 7, 'JNZ': 8, 'CMP': 9,
+                    'DJN': 10,
+                }[instruction.op.name]
 
                 ctx.fillStyle = process_text_colors[instruction.execution_flag + 1]
                 draw_symbol(ctx, x, y, symbol)
@@ -221,14 +236,36 @@
             }
         }
 
-        function draw_button(ctx, x, y, w, text) {
-            ctx.fillStyle = "#808080"
+        function draw_button(ctx, x, y, w, text, text_color, border_color) {
+            if (text_color === undefined) { text_color = '#ffffff' }
+            if (border_color === undefined) { border_color = '#808080' }
+            
+            ctx.fillStyle = border_color
             draw_frame(ctx, x, y, w, 3)
             
-            ctx.fillStyle = "#ffffff"
+            ctx.fillStyle = text_color
             draw_text(ctx, x + row_height * (w - text.length) / 2, y + row_height, text)
 
             var rect = {x1: x * scale, y1: y * scale, x2: x + w * row_height, y2: y + 3 * row_height}
+            rect.x2 *= scale
+            rect.y2 *= scale
+
+            return rect
+        }
+
+        function draw_checkbox(ctx, x, y, text, checked) {
+            ctx.fillStyle = "#808080"
+            draw_frame(ctx, x, y, 3, 3)
+            
+            // check mark
+            ctx.fillStyle = "#ffffff"
+            draw_symbol(ctx, x + row_height, y + row_height, checked ? 149 : 32)
+            
+            // title
+            draw_text(ctx, x + 4 * row_height, y + row_height, text)
+            
+            const w = text.length + 4
+            const rect = {x1: x * scale, y1: y * scale, x2: x + w * row_height, y2: y + 3 * row_height}
             rect.x2 *= scale
             rect.y2 *= scale
 
@@ -257,11 +294,13 @@
             var width = canvas.width / scale
             var height = canvas.height / scale
             
-            var dx = row_height * 25
+            var dump_width = kMAX_ADDRESS_WIDTH + 5 + 2 * (1 + kMAX_ADDRESS_WIDTH)
+
+            var dx = row_height * dump_width
             var dy = 0
             
             ctx.fillStyle = "#000000"
-            ctx.fillRect(0, 0, dx, height);
+            ctx.fillRect(0, 0, dx, height - 3 * row_height);
 
             for (var pid = 0; pid < 2; pid++) {
                 const next = core.processes[pid].next()
@@ -270,35 +309,73 @@
 
                 dy += row_height
                 dy += row_height + draw_memory_dump(ctx, 0, dy, dx, core.memory_dump(next - 10, next + 10), 10)
+
+                const n = core.processes[pid].instruction_pointers.length
+                title = `${n} THREAD${n == 1 ? '' : 'S'}: `
+                draw_text(ctx, 0, dy, title)
+
+                var tids = core.processes[pid].instruction_pointers.slice(0)
+                var w_avail = 25 - title.length
+                var px = title.length
+
+                while (tids.length) {
+                    s = tids.shift() + (tids.length ? ' ' : '')
+
+                    if (w_avail >= s.length) {
+                        w_avail -= s.length
+                    }
+                    else {
+                        px = 0
+                        w_avail = 25 - s.length
+                        dy += row_height
+                    }
+                    
+                    draw_text(ctx, px * row_height, dy, s)
+                    px += s.length
+                }
+
+                dy += row_height * 2
             }
 
-            ctx.fillStyle = "#80f020"
-            draw_text(ctx, 0, dy, `NEXT   ${core.next_instruction().to_string()}`)
+            ctx.fillStyle = process_colors[core.current_process_index + 1]
+            draw_text(ctx, 0, dy, `NEXT ${core.next_instruction().to_string()}`)
+            dy += row_height
+            draw_text(ctx, 0, dy, `CYCLE ${core.cycle}`)
 
+            // graphical representation of the memory
             draw_memory(ctx, dx, 0, width - dx, height - 3 * row_height)
-            
+
             // ui buttons
+            var by = height - 3 * row_height
+            
+            ctx.fillStyle = "#202020"
+            ctx.fillRect(0, by, width, 3 * row_height)
+
             buttons = []
             var b
 
-            b = draw_button(ctx, 0, height - 3 * row_height, 10, 'STEP')
+            b = draw_button(ctx, 0, by, 10, 'STEP')
             b.doit = run_cycle
             buttons.push(b)
 
-            b = draw_button(ctx, 11 * row_height, height - 3 * row_height, 10, 'RUN')
+            b = draw_button(ctx, 11 * row_height, by, 10, 'RUN')
             b.doit = run
             buttons.push(b)
 
-            b = draw_button(ctx, 22 * row_height, height - 3 * row_height, 10, 'STOP')
+            b = draw_button(ctx, 22 * row_height, by, 10, 'STOP')
             b.doit = stop
             buttons.push(b)
 
-            b = draw_button(ctx, 33 * row_height, height - 3 * row_height, 5, '-')
+            b = draw_button(ctx, 33 * row_height, by, 5, '-')
             b.doit = function() { set_size(-1) }
             buttons.push(b)
 
-            b = draw_button(ctx, 39 * row_height, height - 3 * row_height, 5, '+')
+            b = draw_button(ctx, 39 * row_height, by, 5, '+')
             b.doit = function() { set_size(+1) }
+            buttons.push(b)
+            
+            b = draw_checkbox(ctx, 45 * row_height, by, 'BOOST', (cycles > 1))
+            b.doit = function() { toggle_boost(); draw() }
             buttons.push(b)
             
             ctx.scale(1 / scale, 1 / scale)
@@ -323,6 +400,11 @@
 
         function init_everything() {
             core = new Core()
+
+            var code0 =
+`
+ jmp 0
+`
 
             var code1 =
 `
@@ -354,7 +436,7 @@ dummy dat #42 #0
  ADD 0 0
  NOP 0 0
  JMP 0 0
- FRK 0 0
+ SPL 0 0
  SUB 0 0
  JMZ 0 0
  JMN 0 0
@@ -378,8 +460,7 @@ copy    dat     #0,  #833
 `
 
             // init both prpgrams
-
-            var p1 = new Program(code2)
+            var p1 = new Program(code1)
             core.load_program(p1, 0, 2000)
 
             var p2 = new Program(code4)

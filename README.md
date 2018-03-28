@@ -16,7 +16,7 @@ Copy A to B
 ADD replaces the B-target with the sum of the A-value and the B-value
 ### JMP A
 Continue execution at A
-### FRK A
+### SPL A
 Fork a new thread at A
 
 # Core & class structure
