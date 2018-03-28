@@ -28,13 +28,16 @@ class RAM {
     }
 
     init_memory() {
-        
         for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
             this.memory[a] = new Instruction(DAT, null, null)
         }
     }
 
     r(address) {
+        if (address < 0 || address >= kCORE_MEMORY_SIZE || address === undefined) {
+            console.log(`Address ${address} out of bound [0..${kCORE_MEMORY_SIZE}]`)
+        }
+
         this.memory[address].read_flag = this.current_process_index
         return this.memory[address]
     }
@@ -86,12 +89,14 @@ class Core {
     }
 
     step() {
+        if (!this.active) {
+            throw 'MatchAlreadyDoneException'
+        }
+
         // run the currently selected thread
         this.cycle++
 
-        const ip = this.current_process().pop()
-
-        this.step_instruction(ip)
+        this.step_instruction(this.current_process().pop())
 
         // prepare next cycle process
 
@@ -104,8 +109,12 @@ class Core {
         // INSTRUCTION FETCH executes all pre/post-inc/decrements
         const instruction = this.cu.fetch(address, this.ram)
         
+        if (instruction === undefined) {
+            throw 'MemoryCorruptedException'
+        }
+
         // special handling for the for opcodes that spawn new threads
-        if (instruction.forks) {
+        if (instruction.op.forks) {
             this.current_process().push(ALU.normalize(address + 1))
         }
         
@@ -127,7 +136,7 @@ class Core {
             if (active) {
                 console.log(`Status: Process #${id} lost a thread and is down to ${active}`)
             } else {
-                console.log(`Status: Process #${id} faulted`)
+                console.log(`Status: Process #${id} faulted on '${instruction}' at ${address}`)
 
                 // TODO handle all but one dead
                 var active_count = 0
@@ -179,7 +188,7 @@ class Core {
         for (var a = start; a < end; a++) {
             var addr = ALU.normalize(a)
             var i = this.ram.memory[addr]
-            var out = padln(addr, 4) + '   ' + i.to_string()
+            var out = padln(addr, kMAX_ADDRESS_WIDTH - 1) + ' ' + i.to_string()
             output.push(out)
         }
 

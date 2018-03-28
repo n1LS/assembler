@@ -1,21 +1,21 @@
 const addr_names = new Map([
-    [addr_direct       = 1 << 0, { display: '$', run: 'D' }],
-    [addr_indirect     = 1 << 1, { display: '@', run: 'I' }],
-    [addr_immediate    = 1 << 2, { display: '#', run: 'M' }],
-    [addr_predecrement = 1 << 3, { display: '<', run: 'P' }],
+    [addr_direct          = 1 << 0, { display: '$', run: 'D' }],
+    [addr_indirect        = 1 << 1, { display: '@', run: 'I' }],
+    [addr_immediate       = 1 << 2, { display: '#', run: 'M' }],
+    [addr_predecrement    = 1 << 3, { display: '<', run: 'P' }],
+    [addr_postincrement   = 1 << 4, { display: '>', run: 'O' }],
+    [addr_a_indirect      = 1 << 5, { display: '*', run: 'A' }],
+    [addr_a_predecrement  = 1 << 6, { display: '{', run: 'Y' }],
+    [addr_a_postincrement = 1 << 7, { display: '}', run: 'X' }],
 ])
 
 // precalculated accessors
-const default_address_mode = addr_direct
+const default_address_mode   = addr_direct
 const all_address_mode_names = Array.from(addr_names.values()).map(e => e.display).join('')
-const default_dummy_data = addr_names.get(default_address_mode).display + '0'
+const default_dummy_data     = addr_names.get(default_address_mode).display + '0'
 
 function address_mode_name(mode) {
-    if (addr_names.has(mode)) {
-        return addr_names.get(mode).display
-    }
-
-    return '0'
+    return addr_names.get(mode).display
 }
 
 // the Control Unit class is highly standard-specific, since it implements the 
@@ -23,43 +23,47 @@ function address_mode_name(mode) {
 
 class ControlUnit {
     
-        constructor() {
-        }
-
-        resolve(value, address, ram) {
-            switch (value.mode) {
-                case addr_immediate:
-                    return 0
-
-                case addr_direct:
-                    return value.value
-
-                case addr_predecrement:
-                    var dst = ALU.normalize(value.value + address)
-                    var ins = ram.r(dst)
-                    ins.b.value--
-                    ram.w(dst, ins)
-
-                    return value.value + ram.r(dst).b.value
-
-                case addr_indirect:
-                    var dst = ALU.normalize(value.value + address)
-                    var ret = value.value + ram.r(dst).b.value
-
-                    return ret;
-            }
-        }
-
-        fetch(address, ram) {
-            var instruction = ram.r(address).copy()
-
-            var a_pointer = this.resolve(instruction.a, address, ram)
-            var b_pointer = this.resolve(instruction.b, address, ram)
-    
-            instruction.a.pointer = ALU.normalize(address + a_pointer)
-            instruction.b.pointer = ALU.normalize(address + b_pointer)
-            
-            return instruction;
-        }
-        
+    constructor() {
     }
+
+    resolve(value, address, ram) {
+        switch (value.mode) {
+            case addr_immediate:
+                return 0
+
+            case addr_direct:
+                return value.value
+
+            case addr_predecrement:
+                var dst = ALU.normalize(value.value + address)
+                var ins = ram.r(dst)
+                ins.b.value--
+                ram.w(dst, ins)
+                return value.value + ram.r(dst).b.value
+
+            case addr_indirect:
+                var dst = ALU.normalize(value.value + address)
+                var ret = value.value + ram.r(dst).b.value
+                return ret;
+
+            case addr_postincrement:
+            case addr_a_indirect:
+            case addr_a_predecrement:
+            case addr_a_postincrement:
+                throw 'NotYetImplemented'
+        }
+    }
+
+    fetch(address, ram) {
+        var instruction = ram.r(address).copy()
+
+        var a_pointer = this.resolve(instruction.a, address, ram)
+        var b_pointer = this.resolve(instruction.b, address, ram)
+
+        instruction.a.pointer = ALU.normalize(address + a_pointer)
+        instruction.b.pointer = ALU.normalize(address + b_pointer)
+        
+        return instruction;
+    }
+    
+}

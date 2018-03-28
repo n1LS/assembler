@@ -63,9 +63,7 @@ class Opcode {
         }
         else {
             // copy entire instruction
-// TEMP TODO: A POINTER IS WRONG?!            
             const ins = ram.r(instruction.a.pointer).copy()
-            console.log(address + ": " + instruction.to_string() + " >    " + instruction.a.pointer + " = " + ins.to_string())
             ram.w(instruction.b.pointer, ins)
         }
         
@@ -106,7 +104,7 @@ class Opcode {
         return 1
     }
 
-    FRK(instruction, address, ram) {
+    SPL(instruction, address, ram) {
         return instruction.a.pointer
     }    
 
@@ -146,14 +144,24 @@ var opcodes = [
     new Opcode('ADD', 'A', ADD = 02, 2, false, 0b00001111, 0b00001011, Opcode.prototype.ADD ),
     new Opcode('NOP', 'O', NOP = 11, 0, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('JMP', 'J', JMP = 04, 1, false, 0b00001111, 0b00001011, Opcode.prototype.JMP ),
-    new Opcode('FRK', 'F', FRK = 94, 1, true,  0b00001111, 0b00001011, Opcode.prototype.FRK ),
-    new Opcode('DJN', 'D', DJN = 09, 1, false, 0b00001111, 0b00001011, Opcode.prototype.DJN ),
+    new Opcode('SPL', 'F', SPL = 94, 1, true,  0b00001111, 0b00001011, Opcode.prototype.SPL ),
+    new Opcode('DJN', 'D', DJN = 09, 2, false, 0b00001111, 0b00001011, Opcode.prototype.DJN ),
     new Opcode('JMZ', 'Z', JMZ = 49, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMZ ),
     new Opcode('JMN', 'N', JMN = 33, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMN ),
-    
-    new Opcode('SUB', 'S', SUB = 75, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
-    new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
-    new Opcode('SLT', 'S', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
+    /*
+    new Opcode('MUL', 'M', SUB = 23, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MUL ),
+    new Opcode('DIV', 'V', SUB = 37, 2, false, 0b00001111, 0b00001011, Opcode.prototype.DIV ),
+    new Opcode('MOD', 'R', SUB = 63, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MOD ),
+    new Opcode('SUB', 'S', SUB = 75, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
+    new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001011, Opcode.prototype.CMP ),
+    new Opcode('SLT', 'L', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SLT ),
+    new Opcode('SEQ', 'Q', SEQ = 31, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SEQ ),
+    new Opcode('SNE', 'E', SNE = 31, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SNE ),
+    new Opcode('XCH', 'X', XCH = 12, 2, false, 0b00001111, 0b00001011, Opcode.prototype.XCH ),
+    new Opcode('PCT', 'P', PCT = 44, 2, false, 0b00001111, 0b00001011, Opcode.prototype.PCT ),
+    new Opcode('STP', 'W', STP = 55, 2, false, 0b00001111, 0b00001011, Opcode.prototype.STP ),
+    new Opcode('LDP', 'G', LDP = 66, 2, false, 0b00001111, 0b00001011, Opcode.prototype.LDP ),
+    */
 ]
 
 const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))

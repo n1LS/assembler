@@ -5,14 +5,12 @@ class Instruction {
         this.write_flag = -1
         this.execution_flag = -1
         
-        this.opcode = opcode
+        this.op = Opcode.from_code(opcode)
 
         this.a = value_a ? value_a : new Value(0, default_address_mode)
         this.b = value_b ? value_b : new Value(0, default_address_mode)
 
-        const op = Opcode.from_code(this.opcode)
-
-        if (!op.operands_valid(this.a, this.b)) {
+        if (!this.op.operands_valid(this.a, this.b)) {
             console.log('Invalid operands. Cannot create instruction!')
             throw 'InstructionInvalidError';
         }        
@@ -21,37 +19,32 @@ class Instruction {
     copy() {
         var a = new Value(this.a.value, this.a.mode)
         var b = new Value(this.b.value, this.b.mode)
-        var i = new Instruction(this.opcode, a, b)
+        var i = new Instruction(this.op.opcode, a, b)
 
         return i;
     }
 
     execute(address, ram) {
-        // find operation
-        const op = Opcode.from_code(this.opcode)
-
         // execute
-        return op.implementation(this, address, ram)
+        return this.op.implementation(this, address, ram)
     }
 
     //* boring io stuff ********************************************************
 
     to_string() {
-        const op = Opcode.from_code(this.opcode)
-        var out = op.name +
-            ' ' + address_mode_name(this.a.mode) + this.a.value +
-            ' ' + address_mode_name(this.b.mode) + this.b.value
-
-        while (out.length < 20) {
-            out += ' '
+        function padl(l, x) {
+            var s = "" + x
+            while (s.length < l) s = " " + s
+            return s
         }
+
+        var out = `${this.op.name} ${address_mode_name(this.a.mode)}${padl(kMAX_ADDRESS_WIDTH, this.a.value)} ${address_mode_name(this.b.mode)}${padl(kMAX_ADDRESS_WIDTH, this.b.value)}`
 
         return out
     }
 
     to_short_string() {
-        const op = Opcode.from_code(this.opcode)
-        var out = op.short_name
+        var out = this.op.short_name
         
         out += addr_names.get(this.a.mode).run + i2s_s(this.a.value, 4)
         out += addr_names.get(this.b.mode).run + i2s_s(this.b.value, 4)
