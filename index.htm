@@ -98,7 +98,7 @@
         var core
         var timer
         var buttons
-        var scale = 1.5
+        var scale = 1
         var cycles = 1
 
         function run() {
@@ -273,6 +273,8 @@
         }
 
         function draw(redraw) {
+            const start = performance.now()
+
             if (redraw === undefined) {
                 redraw = false
             }
@@ -396,6 +398,9 @@
                 }
             }
 
+
+            const elapsed = Math.floor(100 * (performance.now() - start)) / 100
+            document.title = elapsed + "ms " + (redraw ? " full" : "partial")
         }
 
         function init_everything() {
@@ -466,7 +471,7 @@ copy    dat     #0,  #833
             var p2 = new Program(code4)
             core.load_program(p2, 1, 0)
 
-            draw()
+            draw(true)
         }
 
         function set_size(diff) {

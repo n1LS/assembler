@@ -258,35 +258,28 @@ const font8x8 = [
     /* 0xfe */ 0x00, 0x20, 0x24, 0x26, 0x1f, 0x06, 0x04, 0x00, 
     /* 0xff */ 0x00, 0x00, 0x36, 0x7f, 0x7f, 0x3e, 0x1c, 0x08,
 ]
-
-var font_size = 1
-var row_height = Math.ceil(8 * font_size)
+ 1
+var row_height = 8
 
 function draw_char(ctx, x, y, char, offset) {
-    const s = font_size
     var num = 0
 
     for (var dy = 0; dy < 8; dy++) {
         val = font8x8[offset + char * 8 + dy]
+        const ddy = y + dy
 
         for (var dx = 0; dx < 9; dx++) {
             if (val & 0x80) {
                 num++
-                /*
-                const a = x + dx * s
-                const b = y + dy * s
-                ctx.fillRect(a, b, s, s)
-                */
             }
             else {
                 if (num > 0) {
-                    const a = x + (dx - num) * s
-                    const b = y + dy * s
-                    ctx.fillRect(a, b, s * num, s)
+                    const ddx = x + dx - num
+                    ctx.fillRect(ddx, ddy, num, 1)
                     num = 0;
                 }
             }
-            
+
             val <<= 1
         }
     }
@@ -301,6 +294,6 @@ function draw_text(ctx, x, y, text, color) {
     ctx.fillStyle = color;
 
     for (var n = 0; n < text.length; n++) {
-        draw_char(ctx, x + n * 8 * font_size, y, text.charCodeAt(n), 0x00)
+        draw_char(ctx, x + n * 8, y, text.charCodeAt(n), 0x00)
     }
 }
