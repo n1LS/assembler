@@ -258,26 +258,17 @@ const font8x8 = [
     /* 0xfe */ 0x00, 0x20, 0x24, 0x26, 0x1f, 0x06, 0x04, 0x00, 
     /* 0xff */ 0x00, 0x00, 0x36, 0x7f, 0x7f, 0x3e, 0x1c, 0x08,
 ]
- 1
+
 var row_height = 8
 
-function draw_char(ctx, x, y, char, offset) {
-    var num = 0
-
+function draw_char(x, y, char, offset, color) {
     for (var dy = 0; dy < 8; dy++) {
         val = font8x8[offset + char * 8 + dy]
         const ddy = y + dy
 
-        for (var dx = 0; dx < 9; dx++) {
+        for (var dx = 0; dx < 8; dx++) {
             if (val & 0x80) {
-                num++
-            }
-            else {
-                if (num > 0) {
-                    const ddx = x + dx - num
-                    ctx.fillRect(ddx, ddy, num, 1)
-                    num = 0;
-                }
+                draw_pixel(x + dx, ddy, color)
             }
 
             val <<= 1
@@ -285,15 +276,12 @@ function draw_char(ctx, x, y, char, offset) {
     }
 }
 
-function draw_symbol(ctx, x, y, symbol) {
-    draw_char(ctx, x, y, symbol, 0x00)
+function draw_symbol(x, y, symbol, color) {
+    draw_char(x, y, symbol, 0x00, color)
 }
 
-function draw_text(ctx, x, y, text, color) {
-    
-    ctx.fillStyle = color;
-
+function draw_text(x, y, text, color) {
     for (var n = 0; n < text.length; n++) {
-        draw_char(ctx, x + n * 8, y, text.charCodeAt(n), 0x00)
+        draw_char(x + n * 8, y, text.charCodeAt(n), 0x00, color)
     }
 }
