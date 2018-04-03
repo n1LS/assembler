@@ -15,7 +15,7 @@ function i2s(i, length) {
 
     while (i > 0 || length > s.length) {
         s = b64_encoding.charAt(i % b64_len) + s 
-        i = Math.floor(i / b64_len)
+        i = ~~(i / b64_len)
     }
     
     return s;
