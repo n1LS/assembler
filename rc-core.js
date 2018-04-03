@@ -138,7 +138,6 @@ class Core {
             } else {
                 console.log(`Status: Process #${id} faulted on '${instruction}' at ${address}`)
 
-                // TODO handle all but one dead
                 var active_count = 0
                 var active_index
 

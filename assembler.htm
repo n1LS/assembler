@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <link href="https://fonts.googleapis.com/css?family=Overpass+Mono|Ubuntu+Mono" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
     <style>
         * {
             border: 0;
@@ -67,38 +67,38 @@
         }
     </style>
 
-    <script src="rc-core.js"></script>
-    <script src="rc-math.js"></script>
-    <script src="rc-constants.js"></script>
-    <script src="rc-address-modes.js"></script>
-    <script src="rc-preprocessor.js"></script>
-    <script src="rc-assembler.js"></script>
-    <script src="rc-classes.js"></script>
-    <script src="rc-instruction-set.js"></script>
-    <script src="rc-instruction.js"></script>
+    <script src='rc-core.js'></script>
+    <script src='rc-math.js'></script>
+    <script src='rc-constants.js'></script>
+    <script src='rc-address-modes.js'></script>
+    <script src='rc-preprocessor.js'></script>
+    <script src='rc-assembler.js'></script>
+    <script src='rc-classes.js'></script>
+    <script src='rc-instruction-set.js'></script>
+    <script src='rc-instruction.js'></script>
 
     <script>
 
         function preprocess() {
-            var code = document.getElementById("editor").value
+            var code = document.getElementById('editor').value
             var prepro = new Preprocessor()
             var output = prepro.preprocess(code)
 
             var html = output.code
 
-            html += "<br><span class='gray'>"
+            html += '<br><span class="gray">'
 
             if (output.errors.length) {
-                html += "\n<b>ERRORS:</b>\n" + output.errors.join("\n") + "</b>\n"
+                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n')}</b>\n`
             }
 
             if (output.warnings.length) {
-                html += "\n<i>WARNINGS:</i>\n" + output.warnings.join("\n")
+                html += `\n<i>WARNINGS:</i>\n${output.warnings.join('\n')}`
             }
 
-            html += "</span>"
+            html += '</span>'
 
-            document.getElementById("preprocessor_output").innerHTML = html
+            document.getElementById('preprocessor_output').innerHTML = html
 
             return output.code
         }
@@ -109,19 +109,19 @@
 
             var html = output.listing
 
-            html += "<br><span class='gray'>"
+            html += '<br><span class="gray">'
 
             if (output.errors.length) {
-                html += "\n<b>ERRORS:</b>\n" + output.errors.join("\n") + "</b>\n"
+                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n')}</b>\n`
             }
 
             if (output.warnings.length) {
-                html += "\n<i>WARNINGS:</i>\n" + output.warnings.join("\n")
+                html += `\n<i>WARNINGS:</i>\n${output.warnings.join('\n')}`
             }
 
-            html += "</span>"
+            html += '</span>'
 
-            document.getElementById("assembler_output").innerHTML = html
+            document.getElementById('assembler_output').innerHTML = html
         }
 
         function doit() {
@@ -133,8 +133,8 @@
 
 </head>
 
-<body onload="doit()">
-    <textarea id="editor" onkeyup="doit()">
+<body onload='doit()'>
+    <textarea id='editor' onkeyup='doit()'>
 ;@redcode-n 
 ;@name Test Code
 ;@author np
@@ -163,10 +163,10 @@ lbel:   NOP ; duplicate label
  CMP läbel, läbel
 ; is everything after end ignored?!
 Yes, otherwise this would be a problem</textarea>
-    <pre id="preprocessor_output">preprocessor output</pre>
-    <pre id="assembler_output">assembler output</pre>
-    <div id="toolbar">
-        <input type="button" value="assemble" onclick="doit()">
+    <pre id='preprocessor_output'>preprocessor output</pre>
+    <pre id='assembler_output'>assembler output</pre>
+    <div id='toolbar'>
+        <input type='button' value='assemble' onclick='doit()'>
     </div>
 </body>
 
