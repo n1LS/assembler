@@ -5,18 +5,16 @@ const kGrey         = 0xff808080
 const kDarkGrey     = 0xff404040
 const kDarkestGrey  = 0xff202020
 const kProcess1     = 0xfff06020
-const kProcess2     = 0xff2080f0
+const kProcess2     = 0xff6e28fa
 const kProcessLow1  = 0xffa04020
-const kProcessLow2  = 0xff2060b0
+const kProcessLow2  = 0xff3e18ba
 const kProcess1Text = 0xffffc080
-const kProcess2Text = 0xff80e0ff
-
+const kProcess2Text = 0xffddddff
 
 var ctx = null
 var offs_x = 0
 var offs_y = 0
 var image_data = null
-var data = null
 var width = 0
 var height = 0
 
@@ -25,16 +23,19 @@ var buf8
 var buf32
 
 function draw_set_context(canvas, scale) {
-    console.log("Setting context")
     ctx = canvas.getContext('2d')
-    width = row_height * Math.floor(canvas.width / scale / row_height)
-    height = row_height * Math.floor(canvas.height / scale / row_height)
+    width = row_height * ~~(canvas.width / scale / row_height)
+    height = row_height * ~~(canvas.height / scale / row_height)
     
     image_data = ctx.getImageData(0, 0, width, height)
 
-    buf = new ArrayBuffer(image_data.data.length);
-    buf8 = new Uint8ClampedArray(buf);
-    buf32 = new Uint32Array(buf);
+    buf = new ArrayBuffer(image_data.data.length)
+    buf8 = new Uint8ClampedArray(buf)
+    buf32 = new Uint32Array(buf)
+}
+
+function draw_darken(color) {
+    return ((color & 0x00fefefe) >>> 1) | 0xff000000
 }
 
 function draw_pixel(x, y, color) {
@@ -45,10 +46,18 @@ function draw_pixel(x, y, color) {
 
 function draw_flip() {
     image_data.data.set(buf8)
+    
+    ctx.fillStyle = "#000000"
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    
     ctx.putImageData(image_data, 0, 0)
-    ctx.scale(scale, scale)
-    ctx.drawImage(ctx.canvas, 0, 0)
-    ctx.scale(1 / scale, 1 / scale)
+    
+    if (scale !== 1) {
+        ctx.imageSmoothingEnabled = ~~scale != scale
+        ctx.scale(scale, scale)
+        ctx.drawImage(ctx.canvas, 0, 0)
+        ctx.scale(1 / scale, 1 / scale)
+    }
 }
 
 function draw_rect(x, y, w, h, color) {
