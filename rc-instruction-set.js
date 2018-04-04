@@ -157,10 +157,10 @@ class Opcode {
 
         // compare entire instruction
 
-        A = ram.r(instruction.a.pointer).a.value
-        A = ram.r(instruction.a.pointer).a.value
+        var A = ram.r(instruction.a.pointer)
+        var B = ram.r(instruction.b.pointer)
         
-        return A.equals(B) ? 2 : 1
+        return A.is_equal(B) ? 2 : 1
     }
     
     SLT(instruction, address, ram) {
@@ -218,6 +218,7 @@ const __op_from_name = new Map(opcodes.map(op => [op.name, op]))
 
 // the following is not part of the instruction set itself, it's only used for
 // testing the opcode array for obvious inconsistencies
+
 function check_ops() {
     ops = []
 

@@ -24,6 +24,10 @@ class Instruction {
         return i;
     }
 
+    is_equal(other) {
+        return (this.op == other.op) && (this.a.is_equal(other.a)) && (this.b.is_equal(other.b))
+    }
+
     execute(address, ram) {
         // execute
         return this.op.implementation(this, address, ram)

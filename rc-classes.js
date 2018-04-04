@@ -39,6 +39,10 @@ class Value {
         return new Value(this.value, this.mode)
     }
 
+    is_equal(other) {
+        return (this.value == other.value) && (this.mode == other.mode)
+    }
+
 }
 
 class Process {
