@@ -47,7 +47,7 @@ function draw_pixel(x, y, color) {
 function draw_flip() {
     image_data.data.set(buf8)
     
-    ctx.fillStyle = "#000000"
+    ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     
     ctx.putImageData(image_data, 0, 0)

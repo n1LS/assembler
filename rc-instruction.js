@@ -37,8 +37,8 @@ class Instruction {
 
     to_string() {
         function padl(l, x) {
-            var s = "" + x
-            while (s.length < l) s = " " + s
+            var s = '' + x
+            while (s.length < l) s = ' ' + s
             return s
         }
 

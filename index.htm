@@ -461,12 +461,23 @@ loop    mov     @ptr,  <copy
 copy    dat     #0,  #833
 `
 
+            var test_code = `
+start   CMP #0, 1
+        DAT #1, #0 
+        CMP 4, 5
+        CMP 4, 5
+        DAT #1, #1
+        JMP start
+        DAT #0, #2
+        DAT #2, #2
+        DAT #2, #2
+`            
             // init both prpgrams
             var p1 = new Program(code3)
-            core.load_program(p1, 0, 2000)
+            core.load_program(p1, 1, 2000)
 
-            var p2 = new Program(code4)
-            core.load_program(p2, 1, 0)
+            var p2 = new Program(test_code)
+            core.load_program(p2, 0, 0)
 
             draw(true)
         }
