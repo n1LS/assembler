@@ -1,3 +1,5 @@
+const kPSEUDO_OPCODES = ['ORG', 'END', 'EQU']
+
 class Preprocessor {
 
     constructor() {
@@ -82,7 +84,6 @@ class Preprocessor {
                         this.errors.push(`E003: Unknown opcode '${items[1]} on line ${o_l} '${ins}'`)
                     }
                 }
-
             }
 
             items[0] = this.make_valid_label(items[0])
@@ -110,10 +111,24 @@ class Preprocessor {
         return text.replace(/[^\x41-\x5A_]/g, '')
     }
 
-    resolve_label(offset, text, labels) {
-        labels.forEach(function (value, key) {
-            if (text.includes(key)) {
-                text = text.replace(key, value - offset)
+    resolve_equs(equs, labels) {
+        const self = this
+        
+        equs.forEach(function(value, key) {
+            equs.set(key, self.resolve_label(0, value, labels, equs))
+        })
+    }
+
+    resolve_label(offset, text, labels, equs) {
+        labels.forEach(function(value, key) {
+            while (text.includes(key)) {
+                text = text.replace(key, `(${value - offset})`)
+            }
+        })
+
+        equs.forEach(function(value, key) {
+            while (text.includes(key)) {
+                text = text.replace(key, `(${value})`)
             }
         })
 
@@ -123,6 +138,7 @@ class Preprocessor {
     replace_labels(instructions) {
         // everything in column 1 is a label
         var labels = new Map()
+        var equs = new Map()
 
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
@@ -130,28 +146,44 @@ class Preprocessor {
             var label = this.make_valid_label(components[0])
 
             if (label.length) {
-                if (!labels.has(label)) {
-                    labels.set(label, ins.line)
-                } else {
-                    this.warnings.push(`W003: Duplicate label '${label}' in line ${ins.original_line}`)
+                // two kinds of labels - actual markers and EQU
+                if (ins.instruction[1] == 'EQU') {
+                    instructions[i] = null
+                    
+                    if (!equs.has(label)) {
+                        equs.set(label, components[2])
+                    } else {
+                        this.warnings.push(`W004: Duplicate constant '${label}' in line ${ins.original_line}`)
+                    }
+                }
+                else {
+                    if (!labels.has(label)) {
+                        labels.set(label, ins.line)
+                    } else {
+                        this.warnings.push(`W003: Duplicate label '${label}' in line ${ins.original_line}`)
+                    }
                 }
             }
         }
 
+        instructions = instructions.filter(n => n != null); 
+
+        this.resolve_equs(equs, labels)
+        
         // now find components using these labels      
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
             var comp = ins.instruction
 
             if (comp.length > 2) {
-                comp[2] = this.resolve_label(ins.line, comp[2], labels)
+                comp[2] = this.resolve_label(ins.line, comp[2], labels, equs)
             }
             else {
                 comp.push(default_dummy_data)
             }
 
             if (comp.length > 3) {
-                comp[3] = this.resolve_label(ins.line, comp[3], labels)
+                comp[3] = this.resolve_label(ins.line, comp[3], labels, equs)
             }
             else {
                 comp.push(default_dummy_data)
@@ -191,7 +223,7 @@ class Preprocessor {
     evaluate_address(address) {
         // check if the only contents is now numberical + operand
         for (var i = 0; i < address.length; i++) {
-            const valid_chars = all_address_mode_names + '0123456789+-/*'
+            const valid_chars = all_address_mode_names + '()0123456789+-/*'
 
             if (!valid_chars.includes(address.charAt(i))) {
                 this.errors.push(`E002: Unknown label in address '${address}'`)
@@ -208,7 +240,7 @@ class Preprocessor {
         } else {
             prefix = addr_names.get(default_address_mode).display
         }
-
+        
         return prefix + eval(value)
     }
 
@@ -263,7 +295,8 @@ class Preprocessor {
 
         // parse labels
         this.replace_labels(components)
-
+        components = components.filter(n => n != null); 
+        
         // evaluate address arithmetic
         this.evaluate_addresses(components)
 

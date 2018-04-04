@@ -142,27 +142,32 @@
 ;how well the preprocessor works :-)
     org läbel 🌳
     mov 0, 1
+null equ 0
+win equ 42
 läbel:  ADD #4, 3
     MOV 2, #1 ; comment
     MOV läbel, @2 ; comment
     JMP -2
+    mov win win
+    mov win+win win*null
 base_pointer: DAT 0 0
 base_pointer: DAT 0 0
-    JMP base_pointer
-    JMP base_pointer
+    JMP base_pointer, 1
+    JMP base_pointer, 1
     JMZ base_pointer+3
-    JMZ 0*base_pointer
+    JMZ 0*base_pointer, 0
 lbel:   NOP ; duplicate label
     ;; comment lines
     DAT      #0, #läbel
     ;; moart commentsw 
     NOP
     END
- MOV 3, 1
- MOV 7, @2
- CMP läbel, läbel
+    MOV 3, 1
+    MOV 7, @2
+    CMP läbel, läbel
 ; is everything after end ignored?!
-Yes, otherwise this would be a problem</textarea>
+Yes, otherwise this would be a problem
+    </textarea>
     <pre id='preprocessor_output'>preprocessor output</pre>
     <pre id='assembler_output'>assembler output</pre>
     <div id='toolbar'>
