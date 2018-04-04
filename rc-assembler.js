@@ -86,13 +86,13 @@ class Assembler {
         this.warnings = new Array()
         this.errors = new Array()
 
-        if (typeof string == 'undefined') {
+        if (string === undefined) {
             string = ''
         }
         
         var listing = new Array()
         var instructions = new Array()
-        var components = string.split('\n')
+        var components = string.split('\n').filter(x => x != '')
 
         this.labels = new Map()
 
