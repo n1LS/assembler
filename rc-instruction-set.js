@@ -100,10 +100,6 @@ class Opcode {
         return null
     }
 
-    NOP(instruction, address, ram) {
-        return 1
-    }
-
     SPL(instruction, address, ram) {
         return instruction.a.pointer
     }    
@@ -128,6 +124,58 @@ class Opcode {
 
         return (dst.b.value != 0) ? (instruction.a.pointer - address) : 1
     }
+
+    SUB(instruction, address, ram) {
+        if (instruction.a.mode == addr_immediate) {
+            const dst = instruction.b.pointer
+            const ins = ram.r(dst)
+            ins.b.value -= instruction.a.value
+            ram.w(dst, ins)
+        }
+        else {
+            const dst_address = instruction.b.pointer
+
+            const src = ram.r(instruction.a.pointer)
+            const dst = ram.r(dst_address)
+            
+            dst.a.value = ALU.normalize(dst.a.value - src.a.value)
+            dst.b.value = ALU.normalize(dst.b.value - src.b.value)
+
+            ram.w(dst_address, dst)
+        }
+        
+        return 1
+    }
+
+    CMP(instruction, address, ram) {
+        if (instruction.a.mode == addr_immediate) {
+            const A = instruction.a.value
+            const B = ram.r(instruction.b.pointer).b.value
+
+            return (A == B) ? 2 : 1
+        }
+
+        // compare entire instruction
+
+        A = ram.r(instruction.a.pointer).a.value
+        A = ram.r(instruction.a.pointer).a.value
+        
+        return A.equals(B) ? 2 : 1
+    }
+    
+    SLT(instruction, address, ram) {
+        if (instruction.a.mode == addr_immediate) {
+            const A = instruction.a.value
+            const B = ram.r(instruction.b.pointer).b.value
+
+            return (A < B) ? 2 : 1
+        }
+
+        var A = ram.r(instruction.a.pointer).b.value
+        var B = ram.r(instruction.b.pointer).b.value
+        
+        return (A < B) ? 2 : 1
+    }
 }
 
 var opcodes = [
@@ -142,19 +190,20 @@ var opcodes = [
     new Opcode('DAT', 'D', DAT = 10, 2, false, 0b00000101, 0b00000101, Opcode.prototype.DAT ),
     new Opcode('MOV', 'M', MOV = 13, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MOV ),
     new Opcode('ADD', 'A', ADD = 02, 2, false, 0b00001111, 0b00001011, Opcode.prototype.ADD ),
-    new Opcode('NOP', 'O', NOP = 11, 0, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
+    new Opcode('SUB', 'S', SUB = 75, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
     new Opcode('JMP', 'J', JMP = 04, 1, false, 0b00001111, 0b00001011, Opcode.prototype.JMP ),
-    new Opcode('SPL', 'F', SPL = 94, 1, true,  0b00001111, 0b00001011, Opcode.prototype.SPL ),
-    new Opcode('DJN', 'D', DJN = 09, 2, false, 0b00001111, 0b00001011, Opcode.prototype.DJN ),
     new Opcode('JMZ', 'Z', JMZ = 49, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMZ ),
     new Opcode('JMN', 'N', JMN = 33, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMN ),
-    /*
+    new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001111, Opcode.prototype.CMP ),
+    new Opcode('SLT', 'L', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SLT ),
+    new Opcode('DJN', 'D', DJN = 09, 2, false, 0b00001111, 0b00001011, Opcode.prototype.DJN ),
+    new Opcode('SPL', 'F', SPL = 94, 1, true,  0b00001111, 0b00001011, Opcode.prototype.SPL ),
+    
+    /* ICWS '94
+    new Opcode('NOP', 'O', NOP = 11, 0, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),
     new Opcode('MUL', 'M', SUB = 23, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MUL ),
     new Opcode('DIV', 'V', SUB = 37, 2, false, 0b00001111, 0b00001011, Opcode.prototype.DIV ),
     new Opcode('MOD', 'R', SUB = 63, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MOD ),
-    new Opcode('SUB', 'S', SUB = 75, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
-    new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001011, Opcode.prototype.CMP ),
-    new Opcode('SLT', 'L', SLT = 78, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SLT ),
     new Opcode('SEQ', 'Q', SEQ = 31, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SEQ ),
     new Opcode('SNE', 'E', SNE = 31, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SNE ),
     new Opcode('XCH', 'X', XCH = 12, 2, false, 0b00001111, 0b00001011, Opcode.prototype.XCH ),
@@ -166,3 +215,26 @@ var opcodes = [
 
 const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))
 const __op_from_name = new Map(opcodes.map(op => [op.name, op]))
+
+// the following is not part of the instruction set itself, it's only used for
+// testing the opcode array for obvious inconsistencies
+function check_ops() {
+    ops = []
+
+    for (var o = 0; o < opcodes.length; o++) {
+        const op = opcodes[o]
+
+        if (ops.includes(op.opcode)) {
+            throw `DuplicateOpCode${op.opcode}Error`
+        }
+        else {
+            ops.push(op.opcode)
+        }
+
+        if (op.implementation === undefined) {
+            throw `OpImplementationMissingForOp${op.name}`
+        }
+    }        
+}
+
+check_ops()
