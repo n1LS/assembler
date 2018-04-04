@@ -1,4 +1,4 @@
-const kPSEUDO_OPCODES = ['ORG', 'END', 'EQU']
+const kPSEUDO_OPCODES = ['END', 'EQU', 'ORG']
 
 class Preprocessor {
 
@@ -114,19 +114,19 @@ class Preprocessor {
     resolve_equs(equs, labels) {
         const self = this
         
-        equs.forEach(function(value, key) {
+        equs.forEach((value, key) => {
             equs.set(key, self.resolve_label(0, value, labels, equs))
         })
     }
 
     resolve_label(offset, text, labels, equs) {
-        labels.forEach(function(value, key) {
+        labels.forEach((value, key) => {
             while (text.includes(key)) {
                 text = text.replace(key, `(${value - offset})`)
             }
         })
 
-        equs.forEach(function(value, key) {
+        equs.forEach((value, key) => {
             while (text.includes(key)) {
                 text = text.replace(key, `(${value})`)
             }
