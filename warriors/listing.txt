@@ -1,0 +1,7 @@
+dwarf.txt
+idle.txt
+imp.txt
+mice.txt
+stone.txt
+vampire.txt
+idle.txt
