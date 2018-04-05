@@ -1,6 +1,7 @@
-idle.txt
-mice.txt
-imp.txt
-dwarf.txt
-vampire.txt
-stone.txt
+vampire.red
+validate.red
+stone.red
+mice.red
+imp.red
+idle.red
+dwarf.red
