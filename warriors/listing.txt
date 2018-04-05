@@ -1,7 +1,6 @@
-dwarf.txt
 idle.txt
-imp.txt
 mice.txt
-stone.txt
+imp.txt
+dwarf.txt
 vampire.txt
-idle.txt
+stone.txt
