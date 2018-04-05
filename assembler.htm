@@ -5,37 +5,74 @@
     <style>
         * {
             border: 0;
-            font-weight: lighter;
             font-family: 'Overpass Mono', monospace;
-            font-size: 11px;
+            font-size: 13px;
             line-height: 120%;
             border: 0;
             padding: 0;
             margin: 0;
+            background: #101010;
+        }
+
+        ::-webkit-resizer,
+        ::-webkit-scrollbar,
+        ::-webkit-scrollbar-track,
+        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-corner,
+        ::-webkit-scrollbar-track-piece {
+            background: #202020;
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 6px;
         }
 
         .gray {
             color: gray;
         }
 
+        #container-top {
+            height: 75%;
+            overflow: hidden;
+        }
+
+        #preprocessor_output {
+            width: 30%;
+            overflow: scroll;
+        }
+
         #editor,
+        #editor-nol,
         #preprocessor_output,
         #assembler_output {
             color: white;
-            width: 33%;
             float: left;
             height: 100%;
             background: black;
-            white-space: pre-wrap;
-            /* Since CSS 2.1 */
-            white-space: -moz-pre-wrap;
-            /* Mozilla, since 1999 */
-            white-space: -pre-wrap;
-            /* Opera 4-6 */
-            white-space: -o-pre-wrap;
-            /* Opera 7 */
-            word-wrap: break-word;
-            /* Internet Explorer 5.5+ */
+        }
+
+        #assembler_output {
+            width: 20%;
+            overflow: scroll;
+        }
+
+        #editor {
+            width: calc(50% - 4em - 32px);
+            overflow: scroll;
+        }
+
+        #editor-nol,
+        .num {
+            color: #aaaaaa;
+        }
+        
+        #editor-nol {
+            width: 4em;
+            text-align: right;
+            padding-right: 1em;
         }
 
         #preprocessor_output {
@@ -49,22 +86,44 @@
             background: black;
         }
 
+        .v-spacer {
+            width: 8px;
+            background: black;
+            float: left;
+            height: 100%;
+        }
+
         #toolbar {
-            clear: both;
-            width: 100%;
             background: #404040;
-            bottom: 0;
-            position: absolute;
+            height: 32px;
+            overflow: hidden;
+        }
+
+        #log {
+            clear: both;
+            height: calc(25% - 32px);
+            overflow: scroll;
+            background: #101010;
+        }
+
+        u {
+            color: #ffffff;
+            text-decoration: none;
         }
 
         b {
-            color: red;
+            color: #e2004b;
         }
 
         i {
-            color: orange;
+            color: #fecb00;
             font-style: normal;
         }
+
+        .yay {
+            color: #6bb324;
+        }
+
     </style>
 
     <script src='rc-core.js'></script>
@@ -79,61 +138,136 @@
 
     <script>
 
+        var modified = false
+
+        function number_text(text) {
+            var s = ''
+
+            for (var i = 0; i < text.length; i++) {
+                n = (1 + i + '').padStart(3)
+
+                if (i % 10 == 9) {
+                    s += `<u>${n}</u> ${text[i]}<br>`
+                } else {
+                    s += `<span class='num'>${n}</span> ${text[i]}<br>`
+                }
+            }
+
+            return s
+        }
+
         function preprocess() {
             var code = document.getElementById('editor').value
             var prepro = new Preprocessor()
             var output = prepro.preprocess(code)
 
-            var html = output.code
+            var content = number_text(output.code.split('\n'))
+            document.getElementById('preprocessor_output').innerHTML = content
 
-            html += '<br><span class="gray">'
+            html = '<span class="gray">'
 
             if (output.errors.length) {
-                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n')}</b>\n`
+                html += `<b>PREPROCESSOR ERRORS:</b>\n${output.errors.join('\n')}</b>\n\n`
             }
 
             if (output.warnings.length) {
-                html += `\n<i>WARNINGS:</i>\n${output.warnings.join('\n')}`
+                html += `<i>PREPROCESSOR WARNINGS:</i>\n${output.warnings.join('\n')}`
             }
 
             html += '</span>'
 
-            document.getElementById('preprocessor_output').innerHTML = html
+            document.getElementById('log').innerHTML = html
 
-            return output.code
+            return output
         }
 
         function assemble(code) {
             var assembler = new Assembler()
             var output = assembler.assemble(code)
-            var html = output.listing
+            var content = number_text(output.listing.split('\n'))
 
-            html += '<br><span class="gray">'
+            document.getElementById('assembler_output').innerHTML = content
+
+            var html = '<br><span class="gray">'
 
             if (output.errors.length) {
-                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n')}</b>\n`
+                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n')}</b>\n\n`
             }
 
             if (output.warnings.length) {
-                html += `\n<i>WARNINGS:</i>\n${output.warnings.join('\n')}`
+                html += `<i>WARNINGS:</i>\n${output.warnings.join('\n')}`
             }
 
             html += '</span>'
 
-            document.getElementById('assembler_output').innerHTML = html
+            document.getElementById('log').innerHTML += html
+
+            return output
         }
 
-        function doit() {
+        function changed() {
             var p = preprocess()
-            assemble(p)
+
+            if (p.errors.length == 0) {
+                var a = assemble(p.code)
+
+                if (a.errors.length == 0) {
+                    modified = true
+                    document.getElementById('log').innerHTML += 
+                        '<span class="yay">ASSEMBLED SUCCESSFULLY.</span><br>'
+                }
+                
+                document.getElementById('save_button').hidden = (a.errors.length > 0)
+            } else {
+                document.getElementById('assembler_output').innerHTML =
+                    '<b>Preprocessor errors prevented assembly.</b>'
+                document.getElementById('save_button').hidden = true
+            }
+
+            renumber_lines()
+        }
+
+        function renumber_lines() {
+            var n = document.getElementById('editor').value.split('\n').length
+            var s = ''
+
+            for (var i = 1; i <= n; i++) {
+                if (i % 10 == 0) {
+                    s += `<u>${i}</u><br>`
+                }
+                else {
+                    s += `${i}<br>`
+                }
+            }
+
+            document.getElementById('editor-nol').innerHTML = s
+        }
+
+        function save() {
+            var code = document.getElementById('editor').value
+            var name = document.getElementById('name').value
+            name = '#WRRR_' + name.replace(/ /g, '_')
+
+            localStorage.setItem(name, code)
+
+            document.getElementById('save_button').hidden = true
+        }
+
+        function scrolled() {
+            var y = document.getElementById('editor')
+            var e = document.getElementById('editor-nol')
+            e.style.height = y.scrollHeight
+            e.style.marginTop = `-${y.scrollTop}px`
         }
 
     </script>
 
 </head>
 
-<body onload='doit()'>
-    <textarea id='editor' onkeyup='doit()'>
+<body onload='changed()'>
+    <div id='container-top'>
+        <div id='editor-nol'></div>
+        <textarea autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' id='editor' onkeyup='changed()' onscroll='scrolled()'>
 ;@redcode-n 
 ;@name Test Code
 ;@author np
@@ -166,11 +300,18 @@ lbel:   NOP ; duplicate label
     CMP läbel, läbel
 ; is everything after end ignored?!
 Yes, otherwise this would be a problem
-    </textarea>
-    <pre id='preprocessor_output'>preprocessor output</pre>
-    <pre id='assembler_output'>assembler output</pre>
+        </textarea>
+        <div class='v-spacer'></div>
+        <pre id='preprocessor_output'>preprocessor output</pre>
+        <div class='v-spacer'></div>
+        <pre id='assembler_output'>assembler output</pre>
+    </div>
+
+    <pre id='log'>nCode IDE v0.1</pre>
     <div id='toolbar'>
         <input type='button' value='assemble' onclick='doit()'>
+        <input type='button' value='write to local storage' onclick='save()' id='save_button'>
+        <input type='text' placeholder='warrior name' id='name'>
     </div>
 </body>
 

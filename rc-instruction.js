@@ -50,8 +50,8 @@ class Instruction {
     to_short_string() {
         var out = this.op.short_name
         
-        out += addr_names.get(this.a.mode).run + i2s_s(this.a.value, 4)
-        out += addr_names.get(this.b.mode).run + i2s_s(this.b.value, 4)
+        out += addr_names.get(this.a.mode).short + i2s_s(this.a.value, 3)
+        out += addr_names.get(this.b.mode).short + i2s_s(this.b.value, 3)
 
         return out
     }

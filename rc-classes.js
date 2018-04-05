@@ -4,6 +4,8 @@ class Program {
         var preprocessor = new Preprocessor()
         var output = preprocessor.preprocess(code)
 
+        // TODO: parse meta data like name, author, etc.
+
         this.errors = output.errors;
         this.warnings = output.warnings;
         

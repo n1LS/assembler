@@ -11,9 +11,10 @@ class Preprocessor {
     strip_lines(lines) {
         // strip all non-code lines
         var i = 0
-        var line = 0
+        var original_line = 0
 
         while (i < lines.length) {
+            original_line++
             var line = lines[i]
 
             // strip all comments
@@ -34,7 +35,7 @@ class Preprocessor {
             if (line.trim().length) {
                 // keep all good lines
                 lines[i] = {
-                    original_line: i,
+                    original_line: original_line,
                     line: 0,
                     text: line.trimRight()
                 }
@@ -75,13 +76,13 @@ class Preprocessor {
                 
                 if (op) {
                     if (items.length < 2 + op.num_params) {
-                        this.errors.push(`E006: Too few tokens for opcode '${items[1]}' line ${o_l} '${ins}'`)
+                        this.errors.push(`E006: Too few tokens for opcode '${items[1]}' on line ${o_l} '${ins}'`)
                     }
                 }
                 else {
                     // pseudo-op?
                     if (!kPSEUDO_OPCODES.includes(items[1])) {
-                        this.errors.push(`E003: Unknown opcode '${items[1]} on line ${o_l} '${ins}'`)
+                        this.errors.push(`E003: Unknown opcode '${items[1]}' on line ${o_l} '${ins}'`)
                     }
                 }
             }
@@ -240,7 +241,7 @@ class Preprocessor {
         } else {
             prefix = addr_names.get(default_address_mode).display
         }
-        
+        console.log(address + " => " + prefix + "" + value)
         return prefix + eval(value)
     }
 
@@ -248,6 +249,8 @@ class Preprocessor {
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
             var components = ins.instruction
+
+            console.log(ins.original_line)
 
             if (components.length > 1) {
                 components[1] = this.evaluate_address(components[1])

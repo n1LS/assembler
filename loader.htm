@@ -65,6 +65,13 @@
             document.getElementById('selection-list').innerHTML = html
         }
 
+        function remove(item) {
+            selected.splice(selected.indexOf(item), 1)
+
+            var html = make_ul(selected, 'remove')
+            document.getElementById('selection-list').innerHTML = html
+        }
+
         function make_ul(items, function_name) {
             var s = '<ul>'
 
