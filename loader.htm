@@ -1,0 +1,132 @@
+<html>
+
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
+    <style>
+        * {
+            border: 0;
+            font-family: 'Overpass Mono', monospace;
+            font-size: 13px;
+            line-height: 120%;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        body {
+            background: #101010;
+            padding: 16px;
+        }
+
+        li {
+            font-family: 'Overpass Mono', monospace;
+            font-size: 13px;
+            line-height: 120%;
+            list-style: none;
+        }
+
+        li:hover {
+            background: #606060;
+        }
+
+        h1 {
+            color: #e2004b;
+        }
+
+        ::-webkit-resizer,
+        ::-webkit-scrollbar,
+        ::-webkit-scrollbar-track,
+        ::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-corner,
+        ::-webkit-scrollbar-track-piece {
+            background: #202020;
+            width: 12px;
+            height: 12px;
+        }
+
+        .listing {
+            background: #303030;
+        }
+    </style>
+
+    <script>
+
+        selected = []
+
+        function add(item) {
+            if (selected.includes(item)) {
+                return
+            }
+
+            selected.push(item)
+
+            var html = make_ul(selected, 'remove')
+            document.getElementById('selection-list').innerHTML = html
+        }
+
+        function make_ul(items, function_name) {
+            var s = '<ul>'
+
+            for (var i = 0; i < items.length; i++) {
+                s += (`<li onclick='${function_name}("${items[i]}")'>${items[i]}</li>`)
+            }
+
+            s += '</ul>'
+
+            return s
+        }
+
+    </script>
+</head>
+
+<body>
+
+    <h1>Public warriors:</h1>
+    <div class='listing' id='public'></div>
+
+    <script>
+        // load remote warriors
+        setTimeout(function () {
+            var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt";
+            var file = new XMLHttpRequest();
+
+            file.onreadystatechange = function () {
+
+                if (file.readyState == 4 && file.status == 200) {
+                    var items = file.responseText.split('\n')
+
+                    document.getElementById('public').innerHTML = make_ul(items, 'add')
+                }
+            }
+
+            file.open("GET", url, true);
+            file.send();
+        }, 1)
+    </script>
+
+    <h1>Local:</h1>
+    <div class='listing' id='local'></div>
+
+    <script>
+        // load local warriors
+        var items = []
+
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i)
+
+            if (key.startsWith('#WRRR_')) {
+                items.push(key)
+            }
+        }
+
+        document.getElementById('local').innerHTML = make_ul(items, 'add')
+
+    </script>
+
+    <h1>Selected:</h1>
+    <div class='listing' id='selection-list'></div>
+
+</body>
+
+</html>
