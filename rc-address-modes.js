@@ -1,12 +1,12 @@
 const addr_names = new Map([
-    [addr_direct          = 1 << 0, { display: '$', run: 'D' }],
-    [addr_indirect        = 1 << 1, { display: '@', run: 'I' }],
-    [addr_immediate       = 1 << 2, { display: '#', run: 'M' }],
-    [addr_predecrement    = 1 << 3, { display: '<', run: 'P' }],
-    [addr_postincrement   = 1 << 4, { display: '>', run: 'O' }],
-    [addr_a_indirect      = 1 << 5, { display: '*', run: 'A' }],
-    [addr_a_predecrement  = 1 << 6, { display: '{', run: 'Y' }],
-    [addr_a_postincrement = 1 << 7, { display: '}', run: 'X' }],
+    [addr_direct          = 1 << 0, { display: '$', short: 'D' }],
+    [addr_indirect        = 1 << 1, { display: '@', short: 'I' }],
+    [addr_immediate       = 1 << 2, { display: '#', short: 'M' }],
+    [addr_predecrement    = 1 << 3, { display: '<', short: 'P' }],
+    [addr_postincrement   = 1 << 4, { display: '>', short: 'O' }],
+    [addr_a_indirect      = 1 << 5, { display: '*', short: 'A' }],
+    [addr_a_predecrement  = 1 << 6, { display: '{', short: 'Y' }],
+    [addr_a_postincrement = 1 << 7, { display: '}', short: 'X' }],
 ])
 
 // precalculated accessors
@@ -50,7 +50,7 @@ class ControlUnit {
             case addr_a_indirect:
             case addr_a_predecrement:
             case addr_a_postincrement:
-                throw 'NotYetImplemented'
+                throw 'NotYetImplementedException'
         }
     }
 
