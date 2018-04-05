@@ -19,6 +19,21 @@
             padding: 16px;
         }
 
+        #right {
+            width: 70%;
+            float: left;
+        }
+
+        #left {
+            width: 30%;
+            float: left;
+        }
+
+        #code  {
+            overflow: scroll;
+            height: 100%;
+        }
+
         li {
             font-family: 'Overpass Mono', monospace;
             font-size: 13px;
@@ -52,7 +67,8 @@
 
     <script>
 
-        selected = []
+        var selected = []
+        var current_selection = null
 
         function add(item) {
             if (selected.includes(item)) {
@@ -61,79 +77,112 @@
 
             selected.push(item)
 
-            var html = make_ul(selected, 'remove')
+            var html = make_ul(selected, 'select')
             document.getElementById('selection-list').innerHTML = html
         }
 
         function remove(item) {
+            current_selection = item
             selected.splice(selected.indexOf(item), 1)
 
-            var html = make_ul(selected, 'remove')
+            var html = make_ul(selected, 'select')
             document.getElementById('selection-list').innerHTML = html
+        }
+
+        function show(item) {
+            var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/" + item.trim();
+                var file = new XMLHttpRequest();
+
+                file.onreadystatechange = function () {
+
+                    if (file.readyState == 4 && file.status == 200) {
+                        document.getElementById('code').innerText = file.responseText
+                    }
+                }
+
+                file.open("GET", url, true);
+                file.send();
+        }
+
+        function select(item) {
+            if (current_selection === item) {
+                remove(item)
+            }
+            else {
+                show(item)
+                current_selection = item
+            }
         }
 
         function make_ul(items, function_name) {
             var s = '<ul>'
 
-            for (var i = 0; i < items.length; i++) {
-                s += (`<li onclick='${function_name}("${items[i]}")'>${items[i]}</li>`)
+            for (var i = 0; i
+                < items.length; i++) {
+                s += (`<li onclick='${function_name}(" ${items[i]}" )'>${items[i]}</li>`)
             }
 
             s += '</ul>'
 
             return s
         }
-
     </script>
 </head>
 
 <body>
 
-    <h1>Public warriors:</h1>
-    <div class='listing' id='public'></div>
+    <div id='left'>
 
-    <script>
-        // load remote warriors
-        setTimeout(function () {
-            var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt";
-            var file = new XMLHttpRequest();
+        <h1>Public warriors:</h1>
+        <div class='listing' id='public'></div>
 
-            file.onreadystatechange = function () {
+        <script>
+            // load remote warriors
+            setTimeout(function () {
+                var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt";
+                var file = new XMLHttpRequest();
 
-                if (file.readyState == 4 && file.status == 200) {
-                    var items = file.responseText.split('\n')
+                file.onreadystatechange = function () {
 
-                    document.getElementById('public').innerHTML = make_ul(items, 'add')
+                    if (file.readyState == 4 && file.status == 200) {
+                        var items = file.responseText.split('\n')
+
+                        document.getElementById('public').innerHTML = make_ul(items, 'add')
+                    }
+                }
+
+                file.open("GET", url, true);
+                file.send();
+            }, 1)
+        </script>
+
+        <h1>Local:</h1>
+        <div class='listing' id='local'></div>
+
+        <script>
+            // load local warriors
+            var items = []
+
+            for (var i = 0; i
+                < localStorage.length; i++) {
+                var key = localStorage.key(i)
+
+                if (key.startsWith('#WRRR_')) {
+                    items.push(key)
                 }
             }
 
-            file.open("GET", url, true);
-            file.send();
-        }, 1)
-    </script>
+            document.getElementById('local').innerHTML = make_ul(items,
+                'add')
 
-    <h1>Local:</h1>
-    <div class='listing' id='local'></div>
+        </script>
 
-    <script>
-        // load local warriors
-        var items = []
-
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i)
-
-            if (key.startsWith('#WRRR_')) {
-                items.push(key)
-            }
-        }
-
-        document.getElementById('local').innerHTML = make_ul(items, 'add')
-
-    </script>
-
-    <h1>Selected:</h1>
-    <div class='listing' id='selection-list'></div>
-
+        <h1>Selected:</h1>
+        <div class='listing' id='selection-list'></div>
+    </div>
+    <div id='right'>
+        <pre id="code"></pre>
+    </div>
 </body>
 
 </html>
