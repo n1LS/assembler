@@ -29,9 +29,20 @@
             float: left;
         }
 
-        #code  {
+        #code {
             overflow: scroll;
-            height: 100%;
+            height: calc(100% - 32px);
+        }
+
+        input {
+            height: 32px;
+            padding: 8px;
+            color: white;
+            background: black;
+        }
+
+        #toolbar {
+            height: 32px;
         }
 
         li {
@@ -70,6 +81,15 @@
         var selected = []
         var current_selection = null
 
+        function copy() {
+            var aux = document.createElement('input')
+            aux.setAttribute('value', document.getElementById('code').innerText)
+            document.body.appendChild(aux)
+            aux.select()
+            document.execCommand('copy')
+            document.body.removeChild(aux)
+        }
+
         function add(item) {
             if (selected.includes(item)) {
                 return
@@ -90,18 +110,18 @@
         }
 
         function show(item) {
-            var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/" + item.trim();
-                var file = new XMLHttpRequest();
+            var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/' + item.trim();
+            var file = new XMLHttpRequest();
 
-                file.onreadystatechange = function () {
+            file.onreadystatechange = function () {
 
-                    if (file.readyState == 4 && file.status == 200) {
-                        document.getElementById('code').innerText = file.responseText
-                    }
+                if (file.readyState == 4 && file.status == 200) {
+                    document.getElementById('code').innerText = file.responseText
                 }
+            }
 
-                file.open("GET", url, true);
-                file.send();
+            file.open('GET', url, true);
+            file.send();
         }
 
         function select(item) {
@@ -139,7 +159,7 @@
         <script>
             // load remote warriors
             setTimeout(function () {
-                var url = "https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt";
+                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
                 var file = new XMLHttpRequest();
 
                 file.onreadystatechange = function () {
@@ -151,7 +171,7 @@
                     }
                 }
 
-                file.open("GET", url, true);
+                file.open('GET', url, true);
                 file.send();
             }, 1)
         </script>
@@ -181,7 +201,10 @@
         <div class='listing' id='selection-list'></div>
     </div>
     <div id='right'>
-        <pre id="code"></pre>
+        <pre id='code'></pre>
+        <div id='toolbar'>
+            <input type='button' value='copy to clipboard' onclick='copy()'>
+        </div>
     </div>
 </body>
 
