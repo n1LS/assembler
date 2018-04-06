@@ -36,6 +36,12 @@ class Assembler {
         if (op == null) {
             // this could still be a pseudo-op
             switch (op_string) {
+                case 'END':
+                    if (items.length > 1) {
+                        this.load_address = parseInt(items[1].substr(1))
+                    }
+                    return null
+                    
                 case 'ORG':
                     this.load_address = parseInt(items[1].substr(1))
                     return null
