@@ -184,10 +184,10 @@ var opcodes = [
     //          │││    │   ┌┬┬────────────────────────────────────────────────> opcode name (value indifferent)
     //          │││    │   │││       ┌────────────────────────────────────────> number of parameters required
     //          │││    │   │││       │  ┌┬┬┬┬─────────────────────────────────> spawns new thread?
-    //          │││    │   │││       │  │││││    ┌┬┬┬┬┬┬┬─────────────────────> address modes for A operand (____<#@$)
-    //          │││    │   │││       │  │││││    ││││││││    ┌┬┬┬┬┬┬┬─────────> address modes for B operand (____<#@$)
-    //          │││    │   │││       │  │││││    ││││││││    ││││││││  ┌┬┬┬───> implementation of this opcode
-    new Opcode('DAT', 'D', DAT = 10, 2, false, 0b00000101, 0b00000101, Opcode.prototype.DAT ),
+    //          │││    │   │││       │  │││││    ┌┬┬┬┬┬┬┬─────────────────────> address modes for A operand }{*><#@$
+    //          │││    │   │││       │  │││││    ││││││││    ┌┬┬┬┬┬┬┬─────────> address modes for B operand }{*><#@$
+    //          │││    │   │││       │  │││││    ││││││││    ││││││││  ┌──────> implementation of this opcode
+    new Opcode('DAT', 'D', DAT = 10, 0, false, 0b00000101, 0b00000101, Opcode.prototype.DAT ),
     new Opcode('MOV', 'M', MOV = 13, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MOV ),
     new Opcode('ADD', 'A', ADD = 02, 2, false, 0b00001111, 0b00001011, Opcode.prototype.ADD ),
     new Opcode('SUB', 'S', SUB = 15, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
