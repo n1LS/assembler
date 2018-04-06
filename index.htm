@@ -415,7 +415,7 @@ imp mov 0 next
 next dat 0 0
 `
 
-            var code2 =
+            var code_dwarf =
                 `
 ; dwarf
     org     jump
@@ -425,7 +425,7 @@ JUMP jmp    -2
 dummy dat   #42 #0
 `
 
-            var code3 =
+            var code_stone =
                 `
 ; stone
     mov     <2, 3
@@ -447,7 +447,7 @@ dummy dat   #42 #0
     DJN     0   0
     NOP     0   0
 `
-            var code4 =
+            var code_mice =
                 `
 ; mice
         org     start
@@ -473,10 +473,10 @@ start   CMP #0, 1
         DAT #2, #2
 `            
             // init both prpgrams
-            var p1 = new Program(code3)
+            var p1 = new Program(code_mice)
             core.load_program(p1, 1, 2000)
 
-            var p2 = new Program(test_code)
+            var p2 = new Program(code_mice)
             core.load_program(p2, 0, 0)
 
             draw(true)

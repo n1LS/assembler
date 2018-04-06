@@ -28,7 +28,7 @@ class Preprocessor {
                 if (l) {
                     this.warnings.push(`W002: ${l} lines after END token`);
                 }
-                lines.splice(i, l)
+                lines.splice(i + 1, l - 1)
                 line = ''
             }
 
@@ -108,8 +108,8 @@ class Preprocessor {
     }
 
     make_valid_label(text) {
-        // labels can only be upper-case letters 65 'A' - 90 'Z'
-        return text.replace(/[^\x41-\x5A_]/g, '')
+        // labels can only be upper-case letters 65 'A' - 90 'Z' and numbers 
+        return text.replace(/[^\x41-\x5A_\x30-\x39]/g, '')
     }
 
     resolve_equs(equs, labels) {
@@ -121,15 +121,21 @@ class Preprocessor {
     }
 
     resolve_label(offset, text, labels, equs) {
-        labels.forEach((value, key) => {
+        var keys = Array.from(labels.keys()).sort((a, b) => { 
+            return b.length - a.length })
+
+        keys.forEach(key => {
             while (text.includes(key)) {
-                text = text.replace(key, `(${value - offset})`)
+                text = text.replace(key, `(${labels.get(key) - offset})`)
             }
         })
 
-        equs.forEach((value, key) => {
+        var keys = Array.from(labels.keys()).sort((a, b) => { 
+            return b.length - a.length })
+
+        keys.forEach(key => {
             while (text.includes(key)) {
-                text = text.replace(key, `(${value})`)
+                text = text.replace(key, `(${equs.get(key)})`)
             }
         })
 
@@ -222,10 +228,10 @@ class Preprocessor {
     }
 
     evaluate_address(address) {
+        const valid_chars = all_address_mode_names + '()0123456789+-/*'
+        
         // check if the only contents is now numberical + operand
         for (var i = 0; i < address.length; i++) {
-            const valid_chars = all_address_mode_names + '()0123456789+-/*'
-
             if (!valid_chars.includes(address.charAt(i))) {
                 this.errors.push(`E002: Unknown label in address '${address}'`)
                 return default_dummy_data;
@@ -241,7 +247,7 @@ class Preprocessor {
         } else {
             prefix = addr_names.get(default_address_mode).display
         }
-        console.log(address + " => " + prefix + "" + value)
+
         return prefix + eval(value)
     }
 
@@ -249,8 +255,6 @@ class Preprocessor {
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
             var components = ins.instruction
-
-            console.log(ins.original_line)
 
             if (components.length > 1) {
                 components[1] = this.evaluate_address(components[1])
