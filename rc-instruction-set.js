@@ -101,7 +101,7 @@ class Opcode {
     }
 
     SPL(instruction, address, ram) {
-        return instruction.a.pointer
+        return ALU.normalize(address + instruction.a.pointer)
     }    
 
     DJN(instruction, address, ram) {
@@ -187,17 +187,17 @@ var opcodes = [
     //          │││    │   │││       │  │││││    ┌┬┬┬┬┬┬┬─────────────────────> address modes for A operand }{*><#@$
     //          │││    │   │││       │  │││││    ││││││││    ┌┬┬┬┬┬┬┬─────────> address modes for B operand }{*><#@$
     //          │││    │   │││       │  │││││    ││││││││    ││││││││  ┌──────> implementation of this opcode
-    new Opcode('DAT', 'D', DAT = 10, 0, false, 0b00000101, 0b00000101, Opcode.prototype.DAT ),
+    new Opcode('DAT', 'D', DAT = 10, 0, false, 0b00001111, 0b00001111, Opcode.prototype.DAT ),
     new Opcode('MOV', 'M', MOV = 13, 2, false, 0b00001111, 0b00001011, Opcode.prototype.MOV ),
-    new Opcode('ADD', 'A', ADD = 02, 2, false, 0b00001111, 0b00001011, Opcode.prototype.ADD ),
-    new Opcode('SUB', 'S', SUB = 15, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
-    new Opcode('JMP', 'J', JMP = 04, 1, false, 0b00001111, 0b00001011, Opcode.prototype.JMP ),
+    new Opcode('ADD', 'A', ADD = 15, 2, false, 0b00001111, 0b00001011, Opcode.prototype.ADD ),
+    new Opcode('SUB', 'S', SUB = 16, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SUB ),
+    new Opcode('JMP', 'J', JMP = 14, 1, false, 0b00001111, 0b00001011, Opcode.prototype.JMP ),
     new Opcode('JMZ', 'Z', JMZ = 19, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMZ ),
     new Opcode('JMN', 'N', JMN = 12, 2, false, 0b00001111, 0b00001011, Opcode.prototype.JMN ),
-    new Opcode('CMP', 'C', CMP = 07, 2, false, 0b00001111, 0b00001111, Opcode.prototype.CMP ),
+    new Opcode('CMP', 'C', CMP = 27, 2, false, 0b00001111, 0b00001111, Opcode.prototype.CMP ),
     new Opcode('SLT', 'L', SLT = 11, 2, false, 0b00001111, 0b00001011, Opcode.prototype.SLT ),
-    new Opcode('DJN', 'D', DJN = 09, 2, false, 0b00001111, 0b00001111, Opcode.prototype.DJN ),
-    new Opcode('SPL', 'F', SPL = 03, 1, true,  0b00001111, 0b00001011, Opcode.prototype.SPL ),
+    new Opcode('DJN', 'D', DJN = 17, 2, false, 0b00001111, 0b00001111, Opcode.prototype.DJN ),
+    new Opcode('SPL', 'F', SPL = 18, 1, true,  0b00001111, 0b00001011, Opcode.prototype.SPL ),
     
     /* ICWS '94
     new Opcode('NOP', 'O', NOP = 11, 0, false, 0b00001111, 0b00001011, Opcode.prototype.NOP ),

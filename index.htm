@@ -31,7 +31,6 @@
     <script src="canvas-font.js"></script>
 
     <script>
-
         var core
         var timer
         var buttons
@@ -80,8 +79,7 @@
 
                 if (instruction.execution_flag != -1) {
                     color = process_colors[instruction.execution_flag + 1]
-                }
-                else if (instruction.write_flag != -1) {
+                } else if (instruction.write_flag != -1) {
                     color = process_colors[instruction.execution_flag + 1]
                 }
 
@@ -99,9 +97,12 @@
         function draw_memory_medium(w, h, size) {
             const cols = ~~(w / size)
             const rows = ~~(h / size)
-            
+
             function location(index) {
-                return { x: index % cols, y: ~~(index / cols) }
+                return {
+                    x: index % cols,
+                    y: ~~(index / cols)
+                }
             }
 
             for (var i = 0; i < cols * rows; i++) {
@@ -111,7 +112,7 @@
                 var c2 = process_colors_low[instruction.read_flag + 1]
                 var c3 = process_colors[instruction.execution_flag + 1]
                 const l = location(i)
-                
+
                 const x = l.x * size
                 const y = l.y * size
 
@@ -130,9 +131,12 @@
         function draw_memory_big(w, h, num_visible) {
             const size = row_height
             const cols = ~~(w / size)
-            
+
             function location(index) {
-                return { x: index % cols, y: ~~(index / cols) }
+                return {
+                    x: index % cols,
+                    y: ~~(index / cols)
+                }
             }
 
             for (var i = 0; i < num_visible; i++) {
@@ -161,8 +165,16 @@
                 draw_triangles(x, y, size, size, color1, color2)
 
                 const symbol = {
-                    'MOV': 0, 'DAT': 1, 'JMP': 2, 'NOP': 3, 'SPL': 4,
-                    'ADD': 5, 'SUB': 6, 'JMZ': 7, 'JNZ': 8, 'CMP': 9,
+                    'MOV': 0,
+                    'DAT': 1,
+                    'JMP': 2,
+                    'NOP': 3,
+                    'SPL': 4,
+                    'ADD': 5,
+                    'SUB': 6,
+                    'JMZ': 7,
+                    'JNZ': 8,
+                    'CMP': 9,
                     'DJN': 10,
                 }[instruction.op.name]
 
@@ -198,12 +210,11 @@
                         } else {
                             draw_memory_medium(w, h, sz)
                         }
-                        
+
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 draw_memory_big(w, h, num_visible)
             }
 
@@ -243,8 +254,12 @@
         }
 
         function draw_button(x, y, text, text_color, border_color) {
-            if (text_color === undefined) { text_color = kWhite }
-            if (border_color === undefined) { border_color = kGrey }
+            if (text_color === undefined) {
+                text_color = kWhite
+            }
+            if (border_color === undefined) {
+                border_color = kGrey
+            }
 
             const w = text.length + 2
 
@@ -252,7 +267,13 @@
 
             draw_text(x + row_height, y + row_height, text, text_color)
 
-            var rect = { x1: x, y1: y, x2: x + w * row_height, y2: y + 3 * row_height, width: w * row_height  }
+            var rect = {
+                x1: x,
+                y1: y,
+                x2: x + w * row_height,
+                y2: y + 3 * row_height,
+                width: w * row_height
+            }
 
             return rect
         }
@@ -267,7 +288,13 @@
             draw_text(x + 4 * row_height, y + row_height, text, kWhite)
 
             const w = text.length + 4
-            const rect = { x1: x, y1: y, x2: x + w * row_height, y2: y + 3 * row_height, width: w * row_height }
+            const rect = {
+                x1: x,
+                y1: y,
+                x2: x + w * row_height,
+                y2: y + 3 * row_height,
+                width: w * row_height
+            }
 
             return rect
         }
@@ -301,16 +328,18 @@
 
             // TODO: use number of lines according to the thingie
             const total_rows = ~~(canvas.height / scale / row_height)
-            const usable_rows = total_rows - 2 * 4 /* title, space, threads, space */ - 1 /* spacer */ - 2 /* next, cycle */ - 2 * 1 /* current instruction */ - 3 /* bottom menu */
+            const usable_rows = total_rows - 2 * 4 /* title, space, threads, space */ - 1 /* spacer */ - 2 /* next, cycle */ -
+                2 * 1 /* current instruction */ - 3 /* bottom menu */
             const look_behind = ~~(usable_rows / 4)
             const look_ahead = Math.ceil(usable_rows / 4)
-            
-            for (var pid = 0; pid < 2; pid++) {
+
+            for (var pid = 0; pid < core.processes.length; pid++) {
                 const next = core.processes[pid].next()
                 draw_text(0, dy, `PROCESS ${pid}`, process_colors[pid + 1])
 
                 dy += row_height
-                dy += row_height + draw_memory_dump(0, dy, dx, core.memory_dump(next - look_behind, next + look_ahead), look_behind)
+                dy += row_height + draw_memory_dump(0, dy, dx, core.memory_dump(next - look_behind, next + look_ahead),
+                    look_behind)
 
                 const n = core.processes[pid].instruction_pointers.length
                 title = `${n} THREAD${n == 1 ? '' : 'S'}: `
@@ -320,7 +349,7 @@
                 var s = tids.join(' ')
 
                 const available = 22 - title.length
-                
+
                 if (s.length > available) {
                     s = s.substr(0, available - 1) + String.fromCharCode(31)
                 } else {
@@ -332,7 +361,12 @@
             }
 
             var c = process_colors[core.current_process_index + 1]
-            draw_text(0, dy, `NEXT ${core.next_instruction().to_string()}`, c)
+            const ni = core.next_instruction();
+
+            if (ni !== undefined) {
+                draw_text(0, dy, `NEXT ${ni.to_string()}`, c)
+            }
+
             dy += row_height
             draw_text(0, dy, `CYCLE ${core.cycle}`, kWhite)
 
@@ -365,17 +399,24 @@
 
             b = draw_button(bx, by, '-')
             bx += b.width
-            b.doit = function () { set_size(-1) }
+            b.doit = function () {
+                set_size(-1)
+            }
             buttons.push(b)
 
             b = draw_button(bx, by, '+')
             bx += b.width + row_height
-            b.doit = function () { set_size(+1) }
+            b.doit = function () {
+                set_size(+1)
+            }
             buttons.push(b)
 
             b = draw_checkbox(bx, by, 'BOOST', (cycles > 1))
             bx += b.width + row_height
-            b.doit = function () { toggle_boost(); draw() }
+            b.doit = function () {
+                toggle_boost();
+                draw()
+            }
             buttons.push(b)
 
             // UI handler
@@ -450,18 +491,19 @@ dummy dat   #42 #0
             var code_mice =
                 `
 ; mice
-        org     start
-ptr     dat     #0,  #0
-start   mov     #12,  ptr
-loop    mov     @ptr,  <copy
-        djn     loop,  ptr
-        spl     @copy,  0
-        add     #653,  copy
-        jmz     start,  ptr
-copy    dat     #0,  #833
+        org start
+ptr     dat     #0     ,  #0
+start   mov     #12    ,  ptr
+loop    mov     @ptr   ,  <copy
+        djn     loop   ,  ptr
+        spl     @copy  ,  0
+        add     #653   ,  copy
+        jmz     start  ,  ptr
+copy    dat     #0     ,  #827
 `
 
-            var test_code = `
+            var test_code =
+                `
 start   CMP #0, 1
         DAT #1, #0 
         CMP 4, 5
@@ -471,14 +513,14 @@ start   CMP #0, 1
         DAT #0, #2
         DAT #2, #2
         DAT #2, #2
-`            
+`
             // init both prpgrams
             var p1 = new Program(code_mice)
-            core.load_program(p1, 1, 2000)
-
+            core.load_program(p1, 2000)
+/*
             var p2 = new Program(code_mice)
-            core.load_program(p2, 0, 0)
-
+            core.load_program(p2, 0)
+*/
             draw(true)
         }
 
@@ -487,6 +529,15 @@ start   CMP #0, 1
             draw(true)
         }
 
+        document.onkeydown = function (event) {
+            event = event || window.event;
+            
+            switch (event.keyCode) {
+                case 83: 
+                    run_cycle();
+                    break;
+            }
+        };
     </script>
 
 </head>

@@ -59,11 +59,6 @@ class Core {
         this.set_current_process_index(0)
         this.cycle = 0
         this.active = true
-
-
-        for (var i = 0; i < kNUM_PROGRAMS; i++) {
-            this.processes.push(new Process())
-        }
     }
 
     set_current_process_index(i) {
@@ -71,17 +66,21 @@ class Core {
         this.ram.current_process_index = i
     }
 
-    load_program(program, process_id, address) {
-        this.ram.current_process_index = process_id
+    reset() {
+        this.processes = []
+        this.RAM.init_memory()
+    }
+
+    load_program(program, address) {
+        const pid = this.processes.length
+        this.ram.current_process_index = pid
 
         for (var a = 0; a < program.instructions.length; a++) {
             this.ram.w(a + address, program.instructions[a])
         }
 
-        this.processes[process_id].pop_all()
-        this.processes[process_id].push(address  + program.load_address)
-
-        this.ram.current_process_index = this.current_process_index
+        this.processes[pid] = new Process()
+        this.processes[pid].push(address + program.load_address)
     }
 
     current_process() {
@@ -89,18 +88,19 @@ class Core {
     }
 
     step() {
-        if (!this.active) {
-            throw 'MatchAlreadyDoneException'
-        }
-
         // run the currently selected thread
         this.cycle++
 
-        this.step_instruction(this.current_process().pop())
+        if (this.processes.length) {
+            // get next instruction address
+            const addr = this.current_process().pop();
 
-        // prepare next cycle process
+            // fetch and execute
+            this.step_instruction(addr)
 
-        this.set_current_process_index((1 + this.current_process_index) % kNUM_PROGRAMS)
+            // prepare next cycle process
+            this.set_current_process_index((1 + this.current_process_index) % this.processes.length)
+        }
 
         return this.active
     }
@@ -131,26 +131,23 @@ class Core {
             // instruction could not be executed and returned null
             
             const id = this.current_process_index
-            const active = this.current_process().num_threads()
+            const active = this.current_process().num_threads() > 0
 
             if (active) {
                 console.log(`Status: Process #${id} lost a thread and is down to ${active}`)
             } else {
-                console.log(`Status: Process #${id} faulted on '${instruction}' at ${address}`)
+                console.log(`Status: Process #${id} died on '${instruction}' at ${address}`)
 
-                var active_count = 0
-                var active_index
+                // remove process
+                this.processes.splice(id, 1)
 
-                for (var p = 0; p < this.processes.length; p++) {
-                    if (this.processes[p].num_threads() > 0) {
-                        active_count++
-                        active_index = p
-                    } 
+                if (id >= this.processes.length) {
+                    this.set_current_process_index(0)
                 }
 
-                if (active_count == 1) {
-                    // we have a winner
-                    console.log(`End of Game: Process #${active_index} wins after ${this.cycle} cycles`)
+                if (this.processes.length == 1) {
+                    // we have a winner, print name: TODO
+                    console.log(`End of Game: Process #${0} wins after ${this.cycle} cycles`)
                     this.active = false;
                 }
             }

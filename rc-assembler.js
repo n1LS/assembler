@@ -63,7 +63,7 @@ class Assembler {
 
         var values = [null, null]
 
-        for (var t = 0; t < op.num_params; t++) {
+        for (var t = 0; t < has; t++) {
             var comp = items[t + 1]
             var a = this.address_mode(comp[0])
             var v = parseInt(comp.substr(1))
@@ -77,7 +77,7 @@ class Assembler {
         }
 
         var i = null
-        
+
         try {
             i = new Instruction(op.opcode, values[0], values[1])
         } catch (e) {
