@@ -2,47 +2,14 @@
 
 <head>
     <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
+    
+    <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
+
     <style>
-        * {
-            border: 0;
-            font-family: 'Overpass Mono', monospace;
-            font-size: 13px;
-            line-height: 120%;
-            border: 0;
-            padding: 0;
-            margin: 0;
-            color: #ffffff;
-        }
-
-        body {
-            background: #101010;
-            padding: 16px;
-        }
-
-        #right {
-            width: 70%;
-            float: left;
-        }
-
-        #left {
-            width: 30%;
-            float: left;
-        }
 
         #code {
             overflow: scroll;
-            height: calc(100% - 32px);
-        }
-
-        input {
-            height: 32px;
-            padding: 8px;
-            color: white;
-            background: black;
-        }
-
-        #toolbar {
-            height: 32px;
+            height: 100%;
         }
 
         li {
@@ -54,21 +21,6 @@
 
         li:hover {
             background: #606060;
-        }
-
-        h1 {
-            color: #e2004b;
-        }
-
-        ::-webkit-resizer,
-        ::-webkit-scrollbar,
-        ::-webkit-scrollbar-track,
-        ::-webkit-scrollbar-button,
-        ::-webkit-scrollbar-corner,
-        ::-webkit-scrollbar-track-piece {
-            background: #202020;
-            width: 12px;
-            height: 12px;
         }
 
         .listing {
@@ -151,60 +103,63 @@
 
 <body>
 
-    <div id='left'>
+    <div class='top'>
 
-        <h1>Public warriors:</h1>
-        <div class='listing' id='public'></div>
+        <div class='left30'>
 
-        <script>
-            // load remote warriors
-            setTimeout(function () {
-                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
-                var file = new XMLHttpRequest();
+            <h1>Public warriors:</h1>
+            <div class='listing' id='public'></div>
 
-                file.onreadystatechange = function () {
+            <script>
+                // load remote warriors
+                setTimeout(function () {
+                    var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
+                    var file = new XMLHttpRequest();
 
-                    if (file.readyState == 4 && file.status == 200) {
-                        var items = file.responseText.split('\n')
+                    file.onreadystatechange = function () {
 
-                        document.getElementById('public').innerHTML = make_ul(items, 'add')
+                        if (file.readyState == 4 && file.status == 200) {
+                            var items = file.responseText.split('\n')
+
+                            document.getElementById('public').innerHTML = make_ul(items, 'add')
+                        }
+                    }
+
+                    file.open('GET', url, true);
+                    file.send();
+                }, 1)
+            </script>
+
+            <h1>Local:</h1>
+            <div class='listing' id='local'></div>
+
+            <script>
+                // load local warriors
+                var items = []
+
+                for (var i = 0; i
+                    < localStorage.length; i++) {
+                    var key = localStorage.key(i)
+
+                    if (key.startsWith('#WRRR_')) {
+                        items.push(key)
                     }
                 }
 
-                file.open('GET', url, true);
-                file.send();
-            }, 1)
-        </script>
+                document.getElementById('local').innerHTML = make_ul(items,
+                    'add')
 
-        <h1>Local:</h1>
-        <div class='listing' id='local'></div>
+            </script>
 
-        <script>
-            // load local warriors
-            var items = []
-
-            for (var i = 0; i
-                < localStorage.length; i++) {
-                var key = localStorage.key(i)
-
-                if (key.startsWith('#WRRR_')) {
-                    items.push(key)
-                }
-            }
-
-            document.getElementById('local').innerHTML = make_ul(items,
-                'add')
-
-        </script>
-
-        <h1>Selected:</h1>
-        <div class='listing' id='selection-list'></div>
-    </div>
-    <div id='right'>
-        <pre id='code'></pre>
-        <div id='toolbar'>
-            <input type='button' value='copy to clipboard' onclick='copy()'>
+            <h1>Selected:</h1>
+            <div class='listing' id='selection-list'></div>
         </div>
+        <div class='left70'>
+            <pre id='code'></pre>
+        </div>
+    </div>
+    <div class='toolbar'>
+        <input type='button' value='copy to clipboard' onclick='copy()'>
     </div>
 </body>
 

@@ -2,34 +2,9 @@
 
 <head>
     <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
+
     <style>
-        * {
-            border: 0;
-            font-family: 'Overpass Mono', monospace;
-            font-size: 13px;
-            line-height: 120%;
-            border: 0;
-            padding: 0;
-            margin: 0;
-            background: #101010;
-        }
-
-        ::-webkit-resizer,
-        ::-webkit-scrollbar,
-        ::-webkit-scrollbar-track,
-        ::-webkit-scrollbar-button,
-        ::-webkit-scrollbar-corner,
-        ::-webkit-scrollbar-track-piece {
-            background: #202020;
-            width: 12px;
-            height: 12px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #404040;
-            border-radius: 6px;
-        }
-
         .gray {
             color: gray;
         }
@@ -80,24 +55,11 @@
             background: #101010;
         }
 
-        input {
-            height: 32px;
-            padding: 8px;
-            color: white;
-            background: black;
-        }
-
         .v-spacer {
             width: 8px;
             background: black;
             float: left;
             height: 100%;
-        }
-
-        #toolbar {
-            background: #404040;
-            height: 32px;
-            overflow: hidden;
         }
 
         #log {
@@ -107,23 +69,6 @@
             background: #101010;
         }
 
-        u {
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        b {
-            color: #e2004b;
-        }
-
-        i {
-            color: #fecb00;
-            font-style: normal;
-        }
-
-        .yay {
-            color: #6bb324;
-        }
     </style>
 
     <script src='rc-core.js'></script>
@@ -295,7 +240,7 @@ loop    mov     @ptr   ,  <copy
         add     #653   ,  copy
         jmz     start  ,  ptr
 copy    dat     #0     ,  #833
-        end`
+    end`
 
             document.getElementById('editor').value = code
 
@@ -307,8 +252,9 @@ copy    dat     #0     ,  #833
         <pre id='assembler_output'>assembler output</pre>
     </div>
 
-    <pre id='log'>nCode IDE v0.1</pre>
-    <div id='toolbar'>
+    <pre id='log'></pre>
+    
+    <div class='toolbar'>
         <input type='button' value='assemble' onclick='changed()'>
         <input type='button' value='write to local storage' onclick='save()' id='save_button'>
         <input type='text' placeholder='warrior name' id='name'>
