@@ -499,7 +499,7 @@ loop    mov     @ptr   ,  <copy
         spl     @copy  ,  0
         add     #653   ,  copy
         jmz     start  ,  ptr
-copy    dat     #0     ,  #827
+copy    dat     #0     ,  #833
 `
 
             var test_code =
@@ -516,7 +516,7 @@ start   CMP #0, 1
 `
             // init both prpgrams
             var p1 = new Program(code_mice)
-            core.load_program(p1, 2000)
+            core.load_program(p1, 0)
 /*
             var p2 = new Program(code_mice)
             core.load_program(p2, 0)

@@ -101,7 +101,7 @@ class Opcode {
     }
 
     SPL(instruction, address, ram) {
-        return ALU.normalize(address + instruction.a.pointer)
+        return ALU.normalize(instruction.a.pointer - address)
     }    
 
     DJN(instruction, address, ram) {

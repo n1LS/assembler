@@ -44,7 +44,7 @@ class ControlUnit {
             case addr_indirect:
                 var dst = ALU.normalize(value.value + address)
                 var ret = value.value + ram.r(dst).b.value
-                return ret;
+                return ret
 
             case addr_postincrement:
             case addr_a_indirect:
