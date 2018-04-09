@@ -46,7 +46,25 @@ class RAM {
         this.memory[address] = instruction
         this.memory[address].write_flag = this.current_process_index
     }
-    
+ 
+    random_address(size) {
+        while (1) {
+            const address = ~~(Math.random() * this.memory.length)
+            var fits = true;
+
+            for (var o = 0; o < size; o++) {
+                if (this.memory.write_flag != -1) {
+                    fits = false;
+                    break;
+                }
+            }
+
+            if (fits) {
+                return address
+            }
+        }
+    }
+
 }
 
 class Core {
@@ -72,6 +90,10 @@ class Core {
     }
 
     load_program(program, address) {
+        if (address === undefined) {
+            address = this.ram.random_address(program.instructions.length)
+        }
+
         const pid = this.processes.length
         this.ram.current_process_index = pid
 
