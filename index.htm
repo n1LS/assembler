@@ -636,11 +636,8 @@ last    jmp 0              ;and loop forever
         end start
 `            
             // init both prpgrams
-            var p1 = new Program(code_validate)
-            core.load_program(p1)
-            
-            var p2 = new Program(code_stone)
-            core.load_program(p2)
+            core.load_program(new Program(code_mice))
+            core.load_program(new Program(code_stone))
             
             draw(true)
         }
