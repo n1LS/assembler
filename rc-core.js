@@ -131,10 +131,10 @@ class Core {
             // instruction could not be executed and returned null
             
             const id = this.current_process_index
-            const active = this.current_process().num_threads() > 0
+            const ts = this.current_process().num_threads()
 
-            if (active) {
-                console.log(`Status: Process #${id} lost a thread and is down to ${active}`)
+            if (ts > 0) {
+                console.log(`Status: Process #${id} lost a thread and is down to ${ts}`)
             } else {
                 console.log(`Status: Process #${id} died on '${instruction}' at ${address}`)
 

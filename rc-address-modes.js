@@ -24,6 +24,7 @@ function address_mode_name(mode) {
 class ControlUnit {
     
     constructor() {
+        this.instruction = null
     }
 
     resolve(value, address, ram) {
@@ -39,7 +40,7 @@ class ControlUnit {
                 var ins = ram.r(dst)
                 ins.b.value--
                 ram.w(dst, ins)
-                return value.value + ram.r(dst).b.value
+                return value.value + ins.b.value
 
             case addr_indirect:
                 var dst = ALU.normalize(value.value + address)
@@ -58,6 +59,11 @@ class ControlUnit {
         var instruction = ram.r(address).copy()
 
         var a_pointer = this.resolve(instruction.a, address, ram)
+        
+        // cache a-target
+        var a_dst = ALU.normalize(a_pointer + address)
+        instruction.a_instruction = ram.r(a_dst).copy()
+
         var b_pointer = this.resolve(instruction.b, address, ram)
 
         instruction.a.pointer = ALU.normalize(address + a_pointer)

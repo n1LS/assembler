@@ -63,8 +63,7 @@ class Opcode {
         }
         else {
             // copy entire instruction
-            const ins = ram.r(instruction.a.pointer).copy()
-            ram.w(instruction.b.pointer, ins)
+            ram.w(instruction.b.pointer, instruction.a_instruction)
         }
         
         return 1
