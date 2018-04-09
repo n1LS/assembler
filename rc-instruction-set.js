@@ -79,11 +79,33 @@ class Opcode {
         else {
             const dst_address = instruction.b.pointer
 
-            const src = ram.r(instruction.a.pointer)
+            const src = instruction.a_instruction
             const dst = ram.r(dst_address)
             
-            dst.a.value = ALU.normalize(dst.a.value + src.a.value)
-            dst.b.value = ALU.normalize(dst.b.value + src.b.value)
+            dst.a.value = dst.a.value + src.a.value
+            dst.b.value = dst.b.value + src.b.value
+
+            ram.w(dst_address, dst)
+        }
+        
+        return 1
+    }
+
+    SUB(instruction, address, ram) {
+        if (instruction.a.mode == addr_immediate) {
+            const dst = instruction.b.pointer
+            const ins = ram.r(dst)
+            ins.b.value -= instruction.a.value
+            ram.w(dst, ins)
+        }
+        else {
+            const dst_address = instruction.b.pointer
+
+            const src = instruction.a_instruction
+            const dst = ram.r(dst_address)
+            
+            dst.a.value = dst.a.value - src.a.value
+            dst.b.value = dst.b.value - src.b.value
 
             ram.w(dst_address, dst)
         }
@@ -124,28 +146,6 @@ class Opcode {
         return (dst.b.value != 0) ? (instruction.a.pointer - address) : 1
     }
 
-    SUB(instruction, address, ram) {
-        if (instruction.a.mode == addr_immediate) {
-            const dst = instruction.b.pointer
-            const ins = ram.r(dst)
-            ins.b.value -= instruction.a.value
-            ram.w(dst, ins)
-        }
-        else {
-            const dst_address = instruction.b.pointer
-
-            const src = ram.r(instruction.a.pointer)
-            const dst = ram.r(dst_address)
-            
-            dst.a.value = ALU.normalize(dst.a.value - src.a.value)
-            dst.b.value = ALU.normalize(dst.b.value - src.b.value)
-
-            ram.w(dst_address, dst)
-        }
-        
-        return 1
-    }
-
     CMP(instruction, address, ram) {
         if (instruction.a.mode == addr_immediate) {
             const A = instruction.a.value
@@ -156,7 +156,7 @@ class Opcode {
 
         // compare entire instruction
 
-        var A = ram.r(instruction.a.pointer)
+        var A = instruction.a_instruction
         var B = ram.r(instruction.b.pointer)
         
         return A.is_equal(B) ? 2 : 1
@@ -170,7 +170,7 @@ class Opcode {
             return (A < B) ? 2 : 1
         }
 
-        var A = ram.r(instruction.a.pointer).b.value
+        var A = instruction.a_instruction.b.value
         var B = ram.r(instruction.b.pointer).b.value
         
         return (A < B) ? 2 : 1

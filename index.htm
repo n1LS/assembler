@@ -654,10 +654,13 @@ last    jmp 0              ;and loop forever
             event = event || window.event;
             
             switch (event.keyCode) {
-                case 83: 
+                case 'S'.charCodeAt(0): 
                     run_cycle();
                     break;
-            }
+                case 'D'.charCodeAt(0): 
+                    for (var i = 0; i < 10; i++) run_cycle();
+                    break;
+        }
         };
     </script>
 

@@ -57,16 +57,15 @@ class ControlUnit {
 
     fetch(address, ram) {
         var instruction = ram.r(address).copy()
-
         var a_pointer = this.resolve(instruction.a, address, ram)
         
         // cache a-target
-        var a_dst = ALU.normalize(a_pointer + address)
+        var a_dst = ALU.normalize(address + a_pointer)
         instruction.a_instruction = ram.r(a_dst).copy()
 
         var b_pointer = this.resolve(instruction.b, address, ram)
 
-        instruction.a.pointer = ALU.normalize(address + a_pointer)
+        instruction.a.pointer = a_dst
         instruction.b.pointer = ALU.normalize(address + b_pointer)
         
         return instruction;

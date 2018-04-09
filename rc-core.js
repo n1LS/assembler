@@ -68,7 +68,7 @@ class Core {
 
     reset() {
         this.processes = []
-        this.RAM.init_memory()
+        this.ram.init_memory()
     }
 
     load_program(program, address) {
