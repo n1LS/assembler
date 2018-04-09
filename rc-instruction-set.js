@@ -82,8 +82,8 @@ class Opcode {
             const src = instruction.a_instruction
             const dst = ram.r(dst_address)
             
-            dst.a.value = dst.a.value + src.a.value
-            dst.b.value = dst.b.value + src.b.value
+            dst.a.value = ALU.normalize(dst.a.value + src.a.value)
+            dst.b.value = ALU.normalize(dst.b.value + src.b.value)
 
             ram.w(dst_address, dst)
         }
@@ -104,8 +104,8 @@ class Opcode {
             const src = instruction.a_instruction
             const dst = ram.r(dst_address)
             
-            dst.a.value = dst.a.value - src.a.value
-            dst.b.value = dst.b.value - src.b.value
+            dst.a.value = ALU.normalize(dst.a.value - src.a.value)
+            dst.b.value = ALU.normalize(dst.b.value - src.b.value)
 
             ram.w(dst_address, dst)
         }

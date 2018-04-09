@@ -5,7 +5,7 @@ class ALU {
     }
 
     static normalize(address) {
-        return (kCORE_MEMORY_SIZE_UPPER + address) % kCORE_MEMORY_SIZE
+        return address % kCORE_MEMORY_SIZE
     }
 }
 
@@ -34,6 +34,8 @@ class RAM {
     }
 
     r(address) {
+        address = this.sanitize(address)
+
         if (address < 0 || address >= kCORE_MEMORY_SIZE || address === undefined) {
             console.log(`Address ${address} out of bound [0..${kCORE_MEMORY_SIZE}]`)
         }
@@ -43,10 +45,18 @@ class RAM {
     }
     
     w(address, instruction) {
+        address = this.sanitize(address)
+
         this.memory[address] = instruction
         this.memory[address].write_flag = this.current_process_index
     }
  
+    sanitize(address) {
+        // sanitize
+        return (address + kCORE_MEMORY_SIZE_UPPER) % kCORE_MEMORY_SIZE
+    }
+        
+
     random_address(size) {
         while (1) {
             const address = ~~(Math.random() * this.memory.length)
