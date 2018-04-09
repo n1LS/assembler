@@ -50,12 +50,12 @@ class RAM {
     random_address(size) {
         while (1) {
             const address = ~~(Math.random() * this.memory.length)
-            var fits = true;
+            var fits = true
 
             for (var o = 0; o < size; o++) {
-                if (this.memory.write_flag != -1) {
-                    fits = false;
-                    break;
+                if (this.memory[o].write_flag !== -1) {
+                    fits = false
+                    break
                 }
             }
 
