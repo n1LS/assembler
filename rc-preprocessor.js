@@ -130,7 +130,7 @@ class Preprocessor {
             }
         })
 
-        var keys = Array.from(labels.keys()).sort((a, b) => { 
+        var keys = Array.from(equs.keys()).sort((a, b) => { 
             return b.length - a.length })
 
         keys.forEach(key => {
@@ -248,7 +248,16 @@ class Preprocessor {
             prefix = addr_names.get(default_address_mode).display
         }
 
-        return prefix + eval(value)
+        var v = 0
+
+        try {
+            v = eval(value)
+        }
+        catch (error) {
+            this.errors.push(`E008: Unresolvable address '${value}'`)
+        }
+
+        return prefix + v
     }
 
     evaluate_addresses(instructions) {
