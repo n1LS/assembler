@@ -55,14 +55,8 @@
             background: #101010;
         }
 
-        .v-spacer {
-            width: 8px;
-            background: black;
-            float: left;
-            height: 100%;
-        }
-
         #log {
+            font-family: 'Overpass Mono', monospace;
             clear: both;
             height: calc(25% - 32px);
             overflow: scroll;
@@ -220,11 +214,30 @@
             e.style.marginTop = `-${y.scrollTop}px`
         }
 
+        function init() {
+            // listen to messages from parent window
+            window.addEventListener('message', message_handler, false)
+            
+            changed()
+        }
+
+        function message_handler(event) {
+            items = event.data.split('::')
+            action = items.shift(0)
+
+            switch (action) {
+                case 'load':
+                    document.getElementById('editor').value = atob(items[0])
+                    changed()
+                    break
+            }
+        }
+
     </script>
 
 </head>
 
-<body onload='changed()'>
+<body onload='init()'>
     <div id='container-top'>
         <div id='editor-nol'></div>
         <textarea autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' id='editor' onkeyup='changed()' onscroll='scrolled()'></textarea>

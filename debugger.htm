@@ -34,7 +34,7 @@
         var core
         var timer
         var buttons
-        var scale = 1.5
+        var scale = 1
         var cycles = 1
 
         function run() {
@@ -63,10 +63,6 @@
 
         var memory = new Array(kCORE_MEMORY_SIZE)
 
-        const process_colors = [kDarkestGrey, kProcess1, kProcess2]
-        const process_colors_low = [kDarkestGrey, kProcessLow1, kProcessLow2]
-        const process_text_colors = [kGrey, kProcess1Text, kProcess2Text]
-
         function hash(instruction) {
             return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
         }
@@ -78,9 +74,9 @@
                 var color = kDarkGrey
 
                 if (instruction.execution_flag != -1) {
-                    color = process_colors[instruction.execution_flag + 1]
+                    color = process_colors[0][instruction.execution_flag + 1]
                 } else if (instruction.write_flag != -1) {
-                    color = process_colors[instruction.execution_flag + 1]
+                    color = process_colors[0][instruction.execution_flag + 1]
                 }
 
                 if (i >= kCORE_MEMORY_SIZE) {
@@ -108,9 +104,9 @@
             for (var i = 0; i < cols * rows; i++) {
                 const idx = i % kCORE_MEMORY_SIZE
                 const instruction = core.ram.memory[idx]
-                var c1 = process_colors_low[instruction.write_flag + 1]
-                var c2 = process_colors_low[instruction.read_flag + 1]
-                var c3 = process_colors[instruction.execution_flag + 1]
+                var c1 = process_colors[1][instruction.write_flag + 1]
+                var c2 = process_colors[1][instruction.read_flag + 1]
+                var c3 = process_colors[1][instruction.execution_flag + 1]
                 const l = location(i)
 
                 const x = l.x * size
@@ -154,8 +150,8 @@
                 const x = l.x * size
                 const y = l.y * size
 
-                var color1 = process_colors_low[instruction.read_flag + 1]
-                var color2 = process_colors_low[instruction.write_flag + 1]
+                var color1 = process_colors[2][instruction.read_flag + 1]
+                var color2 = process_colors[2][instruction.write_flag + 1]
 
                 if (i >= kCORE_MEMORY_SIZE) {
                     color1 = draw_darken(color1)
@@ -178,7 +174,7 @@
                     'DJN': 10,
                 }[instruction.op.name]
 
-                var color = process_text_colors[instruction.execution_flag + 1]
+                var color = process_colors[0][instruction.execution_flag + 1]
 
                 if (i >= kCORE_MEMORY_SIZE) {
                     color = draw_darken(color)
@@ -327,16 +323,16 @@
             draw_rect(0, 0, dx, height - 3 * row_height, kBlack);
 
             // TODO: use number of lines according to the thingie
-            const total_rows       = ~~(canvas.height / scale / row_height)
-            const usable_rows      = total_rows - 7 //\n,next,cycle,\n,toolbar
+            const total_rows = ~~(canvas.height / scale / row_height)
+            const usable_rows = total_rows - 7 //\n,next,cycle,\n,toolbar
             const rows_per_process = ~~(usable_rows / core.processes.length)
-            const memory_rows      = rows_per_process - 2 /* title, spaver */
-            const look_behind      = ~~(memory_rows / 4)
-            const look_ahead       = memory_rows - 1 - look_behind
+            const memory_rows = rows_per_process - 2 /* title, spaver */
+            const look_behind = ~~(memory_rows / 4)
+            const look_ahead = memory_rows - 1 - look_behind
 
             for (var pid = 0; pid < core.processes.length; pid++) {
                 const next = core.processes[pid].next()
-                draw_text(0, dy, `PROCESS ${pid}`, process_colors[pid + 1])
+                draw_text(0, dy, `PROCESS ${pid}`, process_colors[1][pid + 1])
 
                 dy += row_height
                 dy += row_height + draw_memory_dump(0, dy, dx, core.memory_dump(next - look_behind, next + look_ahead),
@@ -361,7 +357,7 @@
                 dy += row_height * 2
             }
 
-            var c = process_colors[core.current_process_index + 1]
+            var c = process_colors[1][core.current_process_index + 1]
             const ni = core.next_instruction();
 
             if (ni !== undefined) {
@@ -517,7 +513,7 @@ start   CMP #0, 1
 `
 
             var code_validate = `
-            ;redcode
+;redcode
 ;name Validate 1.1R
 ;author Stefan Strack
 ;strategy System validation program - based on Mark Durham's validation suite
@@ -634,31 +630,57 @@ success mov flag,clear     ;cancel autodestruct
 last    jmp 0              ;and loop forever
 
         end start
-`            
+`
             // init both prpgrams
             core.load_program(new Program(code_mice))
             core.load_program(new Program(code_stone))
-            
+
             draw(true)
+
+            // listen to messages from parent window
+            window.addEventListener('message', message_handler, false)
         }
 
         function set_size(diff) {
-            scale = Math.max(1.0, scale + diff / 4)
+            scale = Math.max(1.0, scale + diff / 2)
             draw(true)
         }
 
         document.onkeydown = function (event) {
             event = event || window.event;
-            
+
             switch (event.keyCode) {
-                case 'S'.charCodeAt(0): 
+                case 'S'.charCodeAt(0):
                     run_cycle();
                     break;
-                case 'D'.charCodeAt(0): 
+                case 'D'.charCodeAt(0):
                     for (var i = 0; i < 10; i++) run_cycle();
                     break;
-        }
+            }
         };
+
+        function message_handler(event) {
+            items = event.data.split('::')
+            action = items.shift(0)
+
+            switch (action) {
+                case 'launch':
+                    load(items)
+                    break
+            }
+        }
+
+        function load(warriors) {
+            core.reset()
+
+            warriors.forEach(base64 => {
+                code = atob(base64)
+                core.load_program(new Program(code))
+            })
+
+            draw(1)
+        }
+
     </script>
 
 </head>

@@ -5,32 +5,37 @@
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
-
         #code {
             overflow: scroll;
-            height: 100%;
+            background-color: #202020;
+            height: calc(100% - 16px);
         }
 
         li {
-            font-family: 'Overpass Mono', monospace;
-            font-size: 13px;
-            line-height: 120%;
-            list-style: none;
+            padding-left: 16px;
+            list-style-type: none;
         }
 
         li:hover {
-            background: #606060;
+            background: #505050;
+            color: #eeeeee;
         }
 
         .listing {
-            background: #303030;
+            background: #404040;
+        }
+
+        .leftAuto {
+            width: auto;
         }
     </style>
 
     <script>
 
         var selected = []
+        var code = []
         var current_selection = null
+        var current_code = null
 
         function copy() {
             var aux = document.createElement('input')
@@ -41,14 +46,23 @@
             document.body.removeChild(aux)
         }
 
-        function add(item) {
+        function add(item, source) {
             if (selected.includes(item)) {
                 return
             }
 
             selected.push(item)
 
-            var html = make_ul(selected, 'select')
+            load(item, function(data) {
+                code[item] = data;
+                show(item)
+            })
+
+            list_selected()
+        }
+
+        function list_selected() {
+            var html = make_ul(selected, 'select', true)
             document.getElementById('selection-list').innerHTML = html
         }
 
@@ -60,19 +74,46 @@
             document.getElementById('selection-list').innerHTML = html
         }
 
-        function show(item) {
-            var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/' + item.trim();
-            var file = new XMLHttpRequest();
+        function load(item, action) {
+            item = item.split(':')
+            
+            const source = item[0]
+            const name = item[1]
 
-            file.onreadystatechange = function () {
+            if (source === 'REMOTE') {
+                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/' + name;
+                var file = new XMLHttpRequest();
 
-                if (file.readyState == 4 && file.status == 200) {
-                    document.getElementById('code').innerText = file.responseText
+                file.onreadystatechange = function () {
+
+                    if (file.readyState == 4 && file.status == 200) {
+                        action(file.responseText)
+                    }
                 }
-            }
 
-            file.open('GET', url, true);
-            file.send();
+                file.open('GET', url, true);
+                file.send();
+            }
+            else {
+                action(localStorage.getItem(name))
+            }
+        }
+
+        function show(item) {
+            load(item, function(data) {
+                current_code = data;
+
+                const lines = data.split('\n')
+                    const n_len = ('' + lines.length).length
+                    var html = ''
+
+                    for (var i = 0; i < lines.length; i++) {
+                        html += `${(''+(1+i)).padStart(n_len)}  ${lines[i]}\n`
+                    }
+                    
+                    document.getElementById('code').innerText = html
+
+            })
         }
 
         function select(item) {
@@ -85,81 +126,127 @@
             }
         }
 
-        function make_ul(items, function_name) {
+        function make_ul(items, function_name, show_source) {
             var s = '<ul>'
 
-            for (var i = 0; i
-                < items.length; i++) {
-                s += (`<li onclick='${function_name}(" ${items[i]}" )'>${items[i]}</li>`)
+            for (var i = 0; i < items.length; i++) {
+                const texts = items[i].split(':')
+                const name = texts[1]
+                const source = texts[0]
+                var src = show_source ? `<span class='right small'>${source}</span>` : ''
+                s += (`<li onclick='${function_name}("${items[i]}")'>🤖 ${name}${src}</li>`)
             }
 
             s += '</ul>'
 
             return s
         }
-    </script>
-</head>
 
-<body>
+        function load_remote_warriors() {
+            // load remote warriors
+            setTimeout(function () {
+                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
+                var file = new XMLHttpRequest();
 
-    <div class='top'>
+                file.onreadystatechange = function () {
 
-        <div class='left30'>
-
-            <h1>Public warriors:</h1>
-            <div class='listing' id='public'></div>
-
-            <script>
-                // load remote warriors
-                setTimeout(function () {
-                    var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
-                    var file = new XMLHttpRequest();
-
-                    file.onreadystatechange = function () {
-
-                        if (file.readyState == 4 && file.status == 200) {
-                            var items = file.responseText.split('\n')
-
-                            document.getElementById('public').innerHTML = make_ul(items, 'add')
-                        }
-                    }
-
-                    file.open('GET', url, true);
-                    file.send();
-                }, 1)
-            </script>
-
-            <h1>Local:</h1>
-            <div class='listing' id='local'></div>
-
-            <script>
-                // load local warriors
-                var items = []
-
-                for (var i = 0; i
-                    < localStorage.length; i++) {
-                    var key = localStorage.key(i)
-
-                    if (key.startsWith('#WRRR_')) {
-                        items.push(key)
+                    if (file.readyState == 4 && file.status == 200) {
+                        var items = file.responseText.split('\n').map(x => x = 'REMOTE:' + x)
+                        document.getElementById('public').innerHTML = make_ul(items, 'add', false)
                     }
                 }
 
-                document.getElementById('local').innerHTML = make_ul(items,
-                    'add')
+                file.open('GET', url, true);
+                file.send();
+            }, 1)
+        }
 
-            </script>
+        function launch() {
+            // get the code for all selected warriors
+            s = []
 
-            <h1>Selected:</h1>
-            <div class='listing' id='selection-list'></div>
+            for (var i = 0; i < selected.length; i++) {
+                const c = code[selected[i]]
+                const b64 = btoa(c)
+                s.push(b64)
+            }
+            
+            const all = s.join('::')
+            window.parent.postMessage('debugger::launch::' + all, '*')
+        }
+
+        function load_local_warriors() {
+            // load local warriors
+            var items = []
+
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i)
+
+                if (key.startsWith('#WRRR_')) {
+                    items.push(key)
+                }
+            }
+
+            items = items.map(x => x = 'LOCAL:' + x)
+
+            document.getElementById('local').innerHTML = make_ul(items, 'add', false)
+        }
+
+        function load_listings() {
+            window.addEventListener('message', message_handler, false)
+
+            load_remote_warriors();
+            load_local_warriors();
+        }
+
+        
+        function message_handler(event) {
+            console.log('loader received: ' + event.data)
+        }
+
+        function remove_all() {
+            code = []
+            selected = []
+
+            list_selected()
+        }
+
+        function move_to_assembler() {
+            window.parent.postMessage('assembler::load::' + btoa(current_code), '*')
+        }
+
+    </script>
+</head>
+
+<body onload='load_listings()'>
+
+    <div class='top'>
+
+        <div class='left30 light padded'>
+
+            <div>📂 Public warriors:</div>
+            <span id='public'></span>
+
+            <div>📂 Local:</div>
+            <span id='local'></span>
+
+            <div>📂 Selected:
+                <span class='right clickable' onclick='remove_all()'>remove all</span>
+            </div>
+            <span id='selection-list'></span>
         </div>
-        <div class='left70'>
-            <pre id='code'></pre>
+
+        <div class='v-spacer'></div>
+
+        <div class='leftAuto'>
+            <pre id='code' class='padded'></pre>
         </div>
-    </div>
-    <div class='toolbar'>
-        <input type='button' value='copy to clipboard' onclick='copy()'>
-    </div>
+
+        <div class='toolbar'>
+            <input type='button' value='copy to clipboard' onclick='copy()'>
+            <input type='button' value='load selected' onclick='launch()'>
+            <input type='button' value='source to assembler' onclick='move_to_assembler()'>
+        </div>
 </body>
 
 </html>
