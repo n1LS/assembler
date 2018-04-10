@@ -4,12 +4,31 @@ const kBlack        = 0xff000000
 const kGrey         = 0xff808080
 const kDarkGrey     = 0xff404040
 const kDarkestGrey  = 0xff202020
-const kProcess1     = 0xfff06020
-const kProcess2     = 0xff6e28fa
-const kProcessLow1  = 0xffa04020
-const kProcessLow2  = 0xff3e18ba
-const kProcess1Text = 0xffffc080
-const kProcess2Text = 0xffddddff
+
+const colors = [
+    [0x20,0x60,0xff],
+    [0xff,0x40,0x20],
+    [0x80,0xff,0x40],
+    [0xff,0x40,0xff],
+    [0x40,0xff,0xff],
+    [0xff,0xff,0x40],
+]
+
+const process_colors = [[kGrey], [kDarkestGrey], [kDarkestGrey]]
+
+for (var c = 0; c < colors.length; c++) {
+    const rgb = colors[c]
+    const scales = [2, 1, 0.70]
+
+    for (var idx = 0; idx < 3; idx++) {
+        function crop(x) {
+            return Math.min(~~x, 255).toString(16).padStart(2).replace(' ', '0')
+        }
+        
+        const s = scales[idx]
+        process_colors[idx][c + 1] = `0xff${crop(rgb[2]*s)}${crop(rgb[1]*s)}${crop(rgb[0]*s)}`
+    }
+}
 
 var ctx = null
 var offs_x = 0
