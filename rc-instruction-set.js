@@ -73,7 +73,7 @@ class Opcode {
         if (instruction.a.mode == addr_immediate) {
             const dst = instruction.b.pointer
             const ins = ram.r(dst)
-            ins.b.value += instruction.a.value
+            ins.b.value = ALU.normalize(ins.b.value + instruction.a.value)
             ram.w(dst, ins)
         }
         else {
@@ -95,7 +95,8 @@ class Opcode {
         if (instruction.a.mode == addr_immediate) {
             const dst = instruction.b.pointer
             const ins = ram.r(dst)
-            ins.b.value -= instruction.a.value
+            ins.b.value = ALU.normalize(ins.b.value - instruction.a.value)
+
             ram.w(dst, ins)
         }
         else {

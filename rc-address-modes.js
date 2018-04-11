@@ -38,7 +38,7 @@ class ControlUnit {
             case addr_predecrement:
                 var dst = ALU.normalize(value.value + address)
                 var ins = ram.r(dst)
-                ins.b.value--
+                ins.b.value = ALU.normalize(ins.b.value - 1)
                 ram.w(dst, ins)
                 return value.value + ins.b.value
 
