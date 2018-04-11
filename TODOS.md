@@ -9,3 +9,7 @@
 - round counter / maximum number of steps before auto-stop
 - winner/score calculation
 - loading at random address w/o overlap
+
+# Refactoring
+
+- better UI/code isolation
