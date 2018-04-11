@@ -2,6 +2,7 @@
 
 <head>
     <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
+    <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
@@ -10,34 +11,51 @@
         }
 
         #container-top {
-            height: 75%;
+            height: 75vh;
+            max-height: 75vh;
+            width: 100vw;
             overflow: hidden;
-        }
-
-        #preprocessor_output {
-            width: 30%;
-            overflow: scroll;
         }
 
         #editor,
         #editor-nol,
-        #preprocessor_output,
-        #assembler_output {
+        #assembler_output,
+        #preprocessor_output {
             color: white;
-            float: left;
-            height: 100%;
-            background: black;
+            height: calc(75vh - 16px);
+            max-height: calc(75 - 16px);
+            background: #101010;
         }
 
-        #assembler_output {
-            width: 20%;
+        #editor-nol {
+            float: left;
+            width: 4em;
+            text-align: right;
+            padding-right: 1em;
+        }
+
+        #blank-out {
+            bottom: 25%;
+            width: 5em;
+            height: 12px;
+            background: #404040;
+            position: absolute;
+        }
+
+        #preprocessor_output {
             overflow: scroll;
+            width: 100%;
         }
 
         #editor {
-            width: calc(50% - 4em - 32px);
             overflow: scroll;
             white-space: nowrap;
+            width: calc(100% - 5em);
+        }
+
+        #assembler_output {
+            overflow: scroll;
+            width: 100%;
         }
 
         #editor-nol,
@@ -45,24 +63,12 @@
             color: #aaaaaa;
         }
 
-        #editor-nol {
-            width: 4em;
-            text-align: right;
-            padding-right: 1em;
-        }
-
-        #preprocessor_output {
-            background: #101010;
-        }
-
         #log {
-            font-family: 'Overpass Mono', monospace;
             clear: both;
             height: calc(25% - 32px);
             overflow: scroll;
             background: #101010;
         }
-
     </style>
 
     <script src='rc-core.js'></script>
@@ -88,7 +94,7 @@
             var html = this
 
             escape.forEach(item => {
-                html = html.replace(item[0], item[1])    
+                html = html.replace(item[0], item[1])
             })
 
             return html
@@ -187,7 +193,7 @@
 
             for (var i = 1; i <= n; i++) {
                 if (i % 10 == 0) {
-                    s += `<u>${i}</u><br>`
+                    s += `<div>${i}</div>`
                 }
                 else {
                     s += `${i}<br>`
@@ -217,7 +223,7 @@
         function init() {
             // listen to messages from parent window
             window.addEventListener('message', message_handler, false)
-            
+
             changed()
         }
 
@@ -238,40 +244,174 @@
 </head>
 
 <body onload='init()'>
-    <div id='container-top'>
-        <div id='editor-nol'></div>
-        <textarea autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' id='editor' onkeyup='changed()' onscroll='scrolled()'></textarea>
-        <script>
 
-            code = `; mice
-        org start
-ptr     dat     #0     ,  #0
-start   mov     #12    ,  ptr
-loop    mov     @ptr   ,  <copy
-        djn     loop   ,  ptr
-        spl     @copy  ,  0
-        add     #653   ,  copy
-        jmz     start  ,  ptr
-copy    dat     #0     ,  #833
-    end`
+        <div id='container-top' class='no-overflow'>
+            <div class='left50 h100 no-overflow'>
+                <h1>Source code</h1>
+                <div id='editor-nol'></div>
+                <div id='blank-out'></div>
+                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='monospace' onkeyup='changed()' onscroll='scrolled()'>
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+57
+8
+9
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+5
+6
+7
+8
+9
+407
+8
+9
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+5
+6
+7
+8
+9
+40
+6
+7
+8
+9
+40  
 
-            document.getElementById('editor').value = code
+7
+8
+9
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+57
+8
+9
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+5
+6
+7
+8
+9
+407
+8
+9
+20
+1
+2
+3
+4
+5
+6
+7
+8
+9
+30
+1
+2
+3
+4
+5
+6
+7
+8
+9
+40
+6
+7
+8
+9
+40                  
+                </textarea>
+            </div>
 
-        </script>
+            <div div class='left30 h100'>
+                <h1>Preprocessor output / Load file</h1>
+                <pre id='preprocessor_output' class='monospace'>preprocessor output</pre>
+            </div>
 
-        <div class='v-spacer'></div>
-        <pre id='preprocessor_output'>preprocessor output</pre>
-        <div class='v-spacer'></div>
-        <pre id='assembler_output'>assembler output</pre>
-    </div>
+            <div class='left20 h100'>
+                <h1>Assembly listing</h1>
+                <pre id='assembler_output' class='monospace'>assembler output</pre>
+            </div>
 
-    <pre id='log'></pre>
-    
-    <div class='toolbar'>
-        <input type='button' value='assemble' onclick='changed()'>
-        <input type='button' value='write to local storage' onclick='save()' id='save_button'>
-        <input type='text' placeholder='warrior name' id='name'>
-    </div>
+        </div>
+
+        <pre id='log' class='monospace'></pre>
+
+        <div class='toolbar'>
+            <input type='button' value='assemble' onclick='changed()'>
+            <input type='button' value='write to local storage' onclick='save()' id='save_button'>
+            <input type='text' placeholder='warrior name' id='name'>
+        </div>
+
 </body>
 
 </html>

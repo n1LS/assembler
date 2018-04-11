@@ -2,6 +2,7 @@
 
 <head>
     <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
+    <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
@@ -53,7 +54,7 @@
 
             selected.push(item)
 
-            load(item, function(data) {
+            load(item, function (data) {
                 code[item] = data;
                 show(item)
             })
@@ -76,7 +77,7 @@
 
         function load(item, action) {
             item = item.split(':')
-            
+
             const source = item[0]
             const name = item[1]
 
@@ -100,18 +101,18 @@
         }
 
         function show(item) {
-            load(item, function(data) {
+            load(item, function (data) {
                 current_code = data;
 
                 const lines = data.split('\n')
-                    const n_len = ('' + lines.length).length
-                    var html = ''
+                const n_len = ('' + lines.length).length
+                var html = ''
 
-                    for (var i = 0; i < lines.length; i++) {
-                        html += `${(''+(1+i)).padStart(n_len)}  ${lines[i]}\n`
-                    }
-                    
-                    document.getElementById('code').innerText = html
+                for (var i = 0; i < lines.length; i++) {
+                    html += `${('' + (1 + i)).padStart(n_len)}  ${lines[i]}\n`
+                }
+
+                document.getElementById('code').innerText = html
 
             })
         }
@@ -134,7 +135,7 @@
                 const name = texts[1]
                 const source = texts[0]
                 var src = show_source ? `<span class='right small'>${source}</span>` : ''
-                s += (`<li onclick='${function_name}("${items[i]}")'>🤖 ${name}${src}</li>`)
+                s += (`<li onclick='${function_name}("${items[i]}")'>* ${name}${src}</li>`)
             }
 
             s += '</ul>'
@@ -170,7 +171,7 @@
                 const b64 = btoa(c)
                 s.push(b64)
             }
-            
+
             const all = s.join('::')
             window.parent.postMessage('debugger::launch::' + all, '*')
         }
@@ -199,7 +200,7 @@
             load_local_warriors();
         }
 
-        
+
         function message_handler(event) {
             console.log('loader received: ' + event.data)
         }
@@ -220,17 +221,17 @@
 
 <body onload='load_listings()'>
 
-    <div class='top'>
+    <div class='top light'>
 
         <div class='left30 light padded'>
 
-            <div>📂 Public warriors:</div>
+            <div>Public warriors:</div>
             <span id='public'></span>
 
-            <div>📂 Local:</div>
+            <div>Local:</div>
             <span id='local'></span>
 
-            <div>📂 Selected:
+            <div>Selected:
                 <span class='right clickable' onclick='remove_all()'>remove all</span>
             </div>
             <span id='selection-list'></span>
@@ -241,12 +242,13 @@
         <div class='leftAuto'>
             <pre id='code' class='padded'></pre>
         </div>
+    </div>
 
-        <div class='toolbar'>
-            <input type='button' value='copy to clipboard' onclick='copy()'>
-            <input type='button' value='load selected' onclick='launch()'>
-            <input type='button' value='source to assembler' onclick='move_to_assembler()'>
-        </div>
+    <div class='toolbar'>
+        <input type='button' value='copy to clipboard' onclick='copy()'>
+        <input type='button' value='load selected' onclick='launch()'>
+        <input type='button' value='source to assembler' onclick='move_to_assembler()'>
+    </div>
 </body>
 
 </html>
