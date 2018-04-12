@@ -24,6 +24,21 @@ body {
   background: #404040;
 }
 
+li {
+  padding-left: 16px;
+  list-style-type: none;
+}
+
+li:hover {
+  background: #505050;
+  color: #eeeeee;
+}
+
+.code {
+  color: white;
+  background: #202020;
+}
+
 .v-spacer {
   width: 8px;
   background: black;
@@ -41,6 +56,14 @@ body {
 
 .top {
   height: calc(100% - 32px);
+}
+
+.num {
+  color: #aaaaaa;
+}
+
+.comment {
+  color: #809080;
 }
 
 .left,
@@ -102,12 +125,12 @@ body {
 }
 
 .no-overflow {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 .full_height {
-    height: 100vh;
-    max-height: 10vh;
+  height: 100vh;
+  max-height: 10vh;
 }
 
 .small {
@@ -131,7 +154,7 @@ body {
 }
 
 .white {
-    color: red;
+  color: red;
 }
 
 h1 {
@@ -153,6 +176,7 @@ b {
   font-weight: 100;
 }
 
+.heading,
 i {
   color: #fecb00;
   font-style: normal;
