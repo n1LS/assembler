@@ -1,25 +1,13 @@
 <html>
 
 <head>
-    <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
     <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
         #code {
             overflow: scroll;
-            background-color: #202020;
             height: calc(100% - 16px);
-        }
-
-        li {
-            padding-left: 16px;
-            list-style-type: none;
-        }
-
-        li:hover {
-            background: #505050;
-            color: #eeeeee;
         }
 
         .listing {
@@ -31,21 +19,14 @@
         }
     </style>
 
+    <script src='ui-common.js'></script>
+
     <script>
 
         var selected = []
         var code = []
         var current_selection = null
         var current_code = null
-
-        function copy() {
-            var aux = document.createElement('input')
-            aux.setAttribute('value', document.getElementById('code').innerText)
-            document.body.appendChild(aux)
-            aux.select()
-            document.execCommand('copy')
-            document.body.removeChild(aux)
-        }
 
         function add(item, source) {
             if (selected.includes(item)) {
@@ -63,16 +44,17 @@
         }
 
         function list_selected() {
-            var html = make_ul(selected, 'select', true)
+            var html = make_ul(selected, 'select', true, ['remove', '[-]'])
             document.getElementById('selection-list').innerHTML = html
         }
 
         function remove(item) {
-            current_selection = item
-            selected.splice(selected.indexOf(item), 1)
+            if (selected.includes(item)) {
+                current_selection = item
+                selected.splice(selected.indexOf(item), 1)
 
-            var html = make_ul(selected, 'select')
-            document.getElementById('selection-list').innerHTML = html
+                list_selected()
+            }
         }
 
         function load(item, action) {
@@ -104,38 +86,33 @@
             load(item, function (data) {
                 current_code = data;
 
-                const lines = data.split('\n')
-                const n_len = ('' + lines.length).length
-                var html = ''
-
-                for (var i = 0; i < lines.length; i++) {
-                    html += `${('' + (1 + i)).padStart(n_len)}  ${lines[i]}\n`
-                }
-
-                document.getElementById('code').innerText = html
+                const content = number_text(data)
+                
+                document.getElementById('code').innerHTML = content
 
             })
         }
 
         function select(item) {
-            if (current_selection === item) {
-                remove(item)
-            }
-            else {
-                show(item)
-                current_selection = item
-            }
+            show(item)
+            current_selection = item
         }
 
-        function make_ul(items, function_name, show_source) {
+        function make_ul(items, function_name, show_source, alt_function) {
             var s = '<ul>'
 
             for (var i = 0; i < items.length; i++) {
                 const texts = items[i].split(':')
                 const name = texts[1]
                 const source = texts[0]
+                var action = ''
+
+                if (alt_function !== undefined) {
+                    action = `<span class='right clickable' onclick='${alt_function[0]}("${items[i]}")'>&nbsp;${alt_function[1]}</span>`
+                }
+
                 var src = show_source ? `<span class='right small'>${source}</span>` : ''
-                s += (`<li onclick='${function_name}("${items[i]}")'>* ${name}${src}</li>`)
+                s += (`<li onclick='${function_name}("${items[i]}")'>* ${name}${action}${src}</li>`)
             }
 
             s += '</ul>'
@@ -225,14 +202,14 @@
 
         <div class='left30 light padded'>
 
-            <div>Public warriors:</div>
+            <div class='heading'>PUBLIC WARRIORS:</div>
             <span id='public'></span>
 
-            <div>Local:</div>
+            <div class='heading'>LOCAL WARRIORS:</div>
             <span id='local'></span>
 
-            <div>Selected:
-                <span class='right clickable' onclick='remove_all()'>remove all</span>
+            <div class='heading'>SELECTED:
+                <span class='right clickable' onclick='remove_all()'>[remove all]</span>
             </div>
             <span id='selection-list'></span>
         </div>
@@ -240,14 +217,13 @@
         <div class='v-spacer'></div>
 
         <div class='leftAuto'>
-            <pre id='code' class='padded'></pre>
+            <pre id='code' class='padded code'></pre>
         </div>
     </div>
 
     <div class='toolbar'>
-        <input type='button' value='copy to clipboard' onclick='copy()'>
-        <input type='button' value='load selected' onclick='launch()'>
-        <input type='button' value='source to assembler' onclick='move_to_assembler()'>
+        <input type='button' value='LOAD SELECTED' onclick='launch()'>
+        <input type='button' value='SOURCE TO ASSEMBLER' onclick='move_to_assembler()' class='right'>
     </div>
 </body>
 

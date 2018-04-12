@@ -1,7 +1,6 @@
 <html>
 
 <head>
-    <link href='https://fonts.googleapis.com/css?family=Overpass+Mono' rel='stylesheet'>
     <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
@@ -21,10 +20,8 @@
         #editor-nol,
         #assembler_output,
         #preprocessor_output {
-            color: white;
             height: calc(75vh - 16px);
             max-height: calc(75 - 16px);
-            background: #101010;
         }
 
         #editor-nol {
@@ -58,11 +55,6 @@
             width: 100%;
         }
 
-        #editor-nol,
-        .num {
-            color: #aaaaaa;
-        }
-
         #log {
             clear: both;
             height: calc(25% - 32px);
@@ -81,47 +73,18 @@
     <script src='rc-instruction-set.js'></script>
     <script src='rc-instruction.js'></script>
 
+    <script src='ui-common.js'></script>
+
     <script>
 
         var modified = false
-
-        String.prototype.html = function () {
-            const escape = [
-                ['>', '&gt;'],
-                ['<', '&lt;'],
-            ]
-
-            var html = this
-
-            escape.forEach(item => {
-                html = html.replace(item[0], item[1])
-            })
-
-            return html
-        }
-
-        function number_text(text) {
-            var s = ''
-
-            for (var i = 0; i < text.length; i++) {
-                n = (1 + i + '').padStart(3)
-
-                if (i % 10 == 9) {
-                    s += `<u>${n}</u> ${text[i]}<br>`
-                } else {
-                    s += `<span class='num'>${n}</span> ${text[i]}<br>`
-                }
-            }
-
-            return s
-        }
 
         function preprocess() {
             var code = document.getElementById('editor').value
             var prepro = new Preprocessor()
             var output = prepro.preprocess(code)
 
-            var content = number_text(output.code.split('\n'))
+            var content = number_text(output.code)
             document.getElementById('preprocessor_output').innerHTML = content
 
             html = '<span class="gray">'
@@ -144,7 +107,7 @@
         function assemble(code) {
             var assembler = new Assembler()
             var output = assembler.assemble(code)
-            var content = number_text(output.listing.split('\n'))
+            var content = number_text(output.listing)
 
             document.getElementById('assembler_output').innerHTML = content
 
@@ -248,158 +211,24 @@
         <div id='container-top' class='no-overflow'>
             <div class='left50 h100 no-overflow'>
                 <h1>Source code</h1>
-                <div id='editor-nol'></div>
-                <div id='blank-out'></div>
-                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='monospace' onkeyup='changed()' onscroll='scrolled()'>
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-57
-8
-9
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-5
-6
-7
-8
-9
-407
-8
-9
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-5
-6
-7
-8
-9
-40
-6
-7
-8
-9
-40  
-
-7
-8
-9
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-57
-8
-9
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-5
-6
-7
-8
-9
-407
-8
-9
-20
-1
-2
-3
-4
-5
-6
-7
-8
-9
-30
-1
-2
-3
-4
-5
-6
-7
-8
-9
-40
-6
-7
-8
-9
-40                  
-                </textarea>
+                <div id='editor-nol' class='code num'></div>
+                <div id='blank-out' class='code'></div>
+                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='code' onkeyup='changed()' onscroll='scrolled()'>
+;redcode-88
+;author your_name_here
+        org start
+start   mov $1,     $1
+dummy   dat #0,     #0</textarea>
             </div>
 
             <div div class='left30 h100'>
                 <h1>Preprocessor output / Load file</h1>
-                <pre id='preprocessor_output' class='monospace'>preprocessor output</pre>
+                <pre id='preprocessor_output' class='code'>preprocessor output</pre>
             </div>
 
             <div class='left20 h100'>
                 <h1>Assembly listing</h1>
-                <pre id='assembler_output' class='monospace'>assembler output</pre>
+                <pre id='assembler_output' class='code'>assembler output</pre>
             </div>
 
         </div>
@@ -407,9 +236,9 @@
         <pre id='log' class='monospace'></pre>
 
         <div class='toolbar'>
-            <input type='button' value='assemble' onclick='changed()'>
-            <input type='button' value='write to local storage' onclick='save()' id='save_button'>
-            <input type='text' placeholder='warrior name' id='name'>
+            <input type='button' value='ASSEMBLE' onclick='changed()'>
+            <input type='button' value='WRITE TO LOCAL STORAGE' onclick='save()' id='save_button'>
+            <input type='text' placeholder='WARRIOR NAME' id='name'>
         </div>
 
 </body>
