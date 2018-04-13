@@ -17,14 +17,14 @@ String.prototype.html = function () {
 
 String.prototype.insert = function(index, string) {
     if (index == 0) {
-        return string + this;
+        return string + this
     } else {
-        return this.substring(0, index) + string + this.substring(index, this.length);
+        return this.substring(0, index) + string + this.substring(index, this.length)
     }
 }
 
 function number_text(text) {
-    text = text.replace(/;/g, 'ÿ').html()
+    text = text.replace(/;/g, '\x1e').html()
     const lines = text.split('\n')
 
     const pad_len = ('' + lines.length).length
@@ -35,10 +35,10 @@ function number_text(text) {
 
         var line = lines[i]
 
-        if (line.includes('ÿ')) {
-            const idx = line.indexOf('ÿ')
+        if (line.includes('\x1e')) {
+            const idx = line.indexOf('\x1e')
             line = line.insert(idx, '<span class="comment">') + '</span>'
-            line = line.replace(/ÿ/g, ';')
+            line = line.replace(/\x1e/g, ';')
         }
 
         if (i % 10 == 9) {

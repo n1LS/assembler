@@ -17,7 +17,7 @@ class Assembler {
     
         addr_names.forEach((v, k) => {
             if (v.display == value) {
-                name = k;
+                name = k
             }
         })
     

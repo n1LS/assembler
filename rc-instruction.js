@@ -12,7 +12,7 @@ class Instruction {
 
         if (!this.op.operands_valid(this.a, this.b)) {
             console.log('Invalid operands. Cannot create instruction!')
-            throw 'InstructionInvalidError';
+            throw 'InstructionInvalidError'
         }        
     }
 
@@ -21,7 +21,7 @@ class Instruction {
         var b = new Value(this.b.value, this.b.mode)
         var i = new Instruction(this.op.opcode, a, b)
 
-        return i;
+        return i
     }
 
     is_equal(other) {

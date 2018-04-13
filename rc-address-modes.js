@@ -68,7 +68,7 @@ class ControlUnit {
         instruction.a.pointer = a_dst
         instruction.b.pointer = ALU.normalize(address + b_pointer)
         
-        return instruction;
+        return instruction
     }
     
 }

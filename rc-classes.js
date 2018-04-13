@@ -4,13 +4,12 @@ class Program {
         var preprocessor = new Preprocessor()
         var output = preprocessor.preprocess(code)
 
-        // TODO: parse meta data like name, author, etc.
-
-        this.errors = output.errors;
-        this.warnings = output.warnings;
+        this.metadata = output.metadata
+        this.errors = output.errors
+        this.warnings = output.warnings
         
         if (this.errors.count) {
-            return;
+            return
         }
         
         var assembler = new Assembler()
@@ -20,7 +19,7 @@ class Program {
         this.warnings.concat(assembly.warnings)
         
         if (assembly.errors.count) {
-            return;
+            return
         }
         
         this.instructions = assembly.code
@@ -49,7 +48,8 @@ class Value {
 
 class Process {
 
-    constructor() {
+    constructor(program) {
+        this.program = program
         this.instruction_pointers = []
     }
 
@@ -63,7 +63,7 @@ class Process {
     
     push(address) {
         if (this.instruction_pointers.length < kMAX_PROCESS_COUNT) {
-            this.instruction_pointers.push(address)
+            this.instruction_pointers.push(ALU.sanitize(address))
         }
     }
 

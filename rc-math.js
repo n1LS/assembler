@@ -2,14 +2,14 @@ const b_encoding = '0123456789!#$%&()*+,-./;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
 const b_len = b_encoding.length
 
 function i2s_s(value, length) {
-    if (typeof length === 'undefined') { length = 0; }
+    if (typeof length === 'undefined') { length = 0 }
     const sign = (value < 0 ? '-' : '+')
-    value = value < 0 ? -value : value;
+    value = value < 0 ? -value : value
     return sign + i2s(value, length)
 }
 
 function i2s(i, length) {
-    if (typeof length === 'undefined') { length = 0; }
+    if (typeof length === 'undefined') { length = 0 }
     
     var s = ''
 
@@ -18,7 +18,7 @@ function i2s(i, length) {
         i = ~~(i / b_len)
     }
     
-    return s;
+    return s
 }
 
 function s2i(s) {

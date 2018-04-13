@@ -54,7 +54,7 @@ var done = false
 
 for (var i = 0; i < num_cycles; i++) {
     if (!core.step()) {
-        break;
+        break
     }
 }
 

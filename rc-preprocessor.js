@@ -287,6 +287,26 @@ class Preprocessor {
         return ascii
     }
 
+    extract_metadata(lines) {
+        const metadata = []
+
+        for (var idx in lines) {
+            const line = lines[idx].trim()
+
+            if (line.length > 1 && line[0] === ';' && line[1] !== ' ' && 
+                line.includes(' ') && line.indexOf(' ') < line.length - 1) {
+
+                const items = line.split(' ')
+                const key = items[0].substr(1)
+                const value = items.splice(1).join(' ')
+
+                metadata[key] = value
+            }
+        }
+
+        return metadata
+    }
+
     preprocess(code) {
         var instructions = new Array()
         this.warnings = new Array()
@@ -298,6 +318,9 @@ class Preprocessor {
 
         // split into array
         var components = code.toUpperCase().split('\n')
+
+        // extract all comment-value meta data liens
+        const metadata = this.extract_metadata(code.split('\n'))
 
         // strip all non-code lines and turn the strings into [index, text] 
         // objects
@@ -325,7 +348,8 @@ class Preprocessor {
         return {
             code: output,
             errors: this.errors,
-            warnings: this.warnings
+            warnings: this.warnings,
+            metadata: metadata,
         }
     }
 }
