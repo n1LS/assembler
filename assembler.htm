@@ -190,6 +190,12 @@
             changed()
         }
 
+        function debug() {
+            const code = btoa(document.getElementById('editor').value)
+
+            window.parent.postMessage(`debugger::launch::${code}`, '*')
+        }   
+
         function message_handler(event) {
             items = event.data.split('::')
             action = items.shift(0)
@@ -239,6 +245,7 @@ dummy   dat #0,     #0</textarea>
             <input type='button' value='ASSEMBLE' onclick='changed()'>
             <input type='button' value='WRITE TO LOCAL STORAGE' onclick='save()' id='save_button'>
             <input type='text' placeholder='WARRIOR NAME' id='name'>
+            <input type='button' value='SELECTED to DEBUGGER' onclick='debug()' class='right'>
         </div>
 
 </body>

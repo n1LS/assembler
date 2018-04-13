@@ -5,18 +5,12 @@
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
+
         #code {
             overflow: scroll;
             height: calc(100% - 16px);
         }
 
-        .listing {
-            background: #404040;
-        }
-
-        .leftAuto {
-            width: auto;
-        }
     </style>
 
     <script src='ui-common.js'></script>
@@ -30,6 +24,7 @@
 
         function add(item, source) {
             if (selected.includes(item)) {
+                show(item)
                 return
             }
 
@@ -108,7 +103,7 @@
                 var action = ''
 
                 if (alt_function !== undefined) {
-                    action = `<span class='right clickable' onclick='${alt_function[0]}("${items[i]}")'>&nbsp;${alt_function[1]}</span>`
+                    action = `<span class='right clickable' onclick='${alt_function[0]}("${items[i]}")'> ${alt_function[1]}</span>`
                 }
 
                 var src = show_source ? `<span class='right small'>${source}</span>` : ''
@@ -139,7 +134,7 @@
             }, 1)
         }
 
-        function launch() {
+        function selected_warriors() {
             // get the code for all selected warriors
             s = []
 
@@ -149,8 +144,15 @@
                 s.push(b64)
             }
 
-            const all = s.join('::')
-            window.parent.postMessage('debugger::launch::' + all, '*')
+            return s.join('::')
+        }
+
+        function launch() {
+            window.parent.postMessage(`debugger::launch::${selected_warriors()}`, '*')
+        }
+
+        function match() {
+            window.parent.postMessage(`match::load::${selected_warriors()}`, '*')
         }
 
         function load_local_warriors() {
@@ -209,21 +211,24 @@
             <span id='local'></span>
 
             <div class='heading'>SELECTED:
-                <span class='right clickable' onclick='remove_all()'>[remove all]</span>
+                <span class='right clickable' onclick='remove_all()'>[REMOVE ALL]</span>
             </div>
             <span id='selection-list'></span>
+
         </div>
 
         <div class='v-spacer'></div>
 
-        <div class='leftAuto'>
+        <div>
             <pre id='code' class='padded code'></pre>
         </div>
+
     </div>
 
     <div class='toolbar'>
-        <input type='button' value='LOAD SELECTED' onclick='launch()'>
-        <input type='button' value='SOURCE TO ASSEMBLER' onclick='move_to_assembler()' class='right'>
+        <input type='button' value='SELECTED to DEBUGGER' onclick='launch()'>
+        <input type='button' value='SELECTED to MATCH' onclick='match()'>
+        <input type='button' value='CODE to ASSEMBLER' onclick='move_to_assembler()' class='right'>
     </div>
 </body>
 

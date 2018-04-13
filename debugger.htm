@@ -324,7 +324,7 @@
 
             // TODO: use number of lines according to the thingie
             const total_rows = ~~(canvas.height / scale / row_height)
-            const usable_rows = total_rows - 7 //\n,next,cycle,\n,toolbar
+            const usable_rows = total_rows - 8 //\n,next,cycle,\n,toolbar
             const rows_per_process = ~~(usable_rows / core.processes.length)
             const memory_rows = rows_per_process - 2 /* title, spaver */
             const look_behind = ~~(memory_rows / 4)
@@ -335,8 +335,7 @@
                 draw_text(0, dy, `PROCESS ${pid}`, process_colors[1][pid + 1])
 
                 dy += row_height
-                dy += row_height + draw_memory_dump(0, dy, dx, core.memory_dump(next - look_behind, next + look_ahead),
-                    look_behind)
+                dy += row_height + draw_memory_dump(0, dy, dx, core.memory_dump(next - look_behind, next + look_ahead), look_behind)
 
                 const n = core.processes[pid].instruction_pointers.length
                 title = `${n} THREAD${n == 1 ? '' : 'S'}: `
@@ -360,7 +359,7 @@
             var c = process_colors[1][core.current_process_index + 1]
             const ni = core.next_instruction();
 
-            if (ni !== undefined) {
+            if (ni !== null) {
                 draw_text(0, dy, `NEXT ${ni.to_string()}`, c)
             }
 
@@ -446,7 +445,7 @@
  jmp 0
 `
 
-            var code1 =
+            var code_imp =
                 `
 ; imp
 imp mov 0 next
@@ -632,8 +631,8 @@ last    jmp 0              ;and loop forever
         end start
 `
             // init both prpgrams
-            core.load_program(new Program(code_mice))
-            core.load_program(new Program(code_stone))
+            core.load_program(new Program(code_imp))
+            core.load_program(new Program(code_imp))
 
             draw(true)
 
