@@ -1,3 +1,4 @@
+agony.red
 dwarf.red
 fail.red
 idle.red
