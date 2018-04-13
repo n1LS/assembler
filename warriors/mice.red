@@ -1,4 +1,5 @@
-; mice
+;redcode-88
+;name mice
         org     start
 ptr     dat     #0,  #0
 start   mov     #12,  ptr

@@ -1,3 +1,4 @@
+;redcode-88
 ;name Vampire 1
 
 const EQU 2365

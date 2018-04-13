@@ -1,4 +1,5 @@
-; dwarf
+;redcode-88
+;name dwarf
     org     jump
     add     #4, 3
     mov     2,  @2
