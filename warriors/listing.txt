@@ -1,7 +1,8 @@
-vampire.red
-validate.red
-stone.red
-mice.red
-imp.red
-idle.red
 dwarf.red
+fail.red
+idle.red
+imp.red
+mice.red
+stone.red
+validate.red
+vampire.red
