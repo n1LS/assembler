@@ -442,19 +442,20 @@
 
             var code0 =
                 `
+;name idle                
  jmp 0
 `
 
             var code_imp =
                 `
-; imp
+;name imp
 imp mov 0 next
 next dat 0 0
 `
 
             var code_dwarf =
                 `
-; dwarf
+;name dwarf
     org     jump
     add     #4, 3
     mov     2,  @2
@@ -464,7 +465,7 @@ dummy dat   #42 #0
 
             var code_stone =
                 `
-; stone
+;name stone
     mov     <2, 3
     add     3,  -1
     jmp     -2
@@ -486,7 +487,7 @@ dummy dat   #42 #0
 `
             var code_mice =
                 `
-; mice
+;name mice
         org start
 ptr     dat     #0     ,  #0
 start   mov     #12    ,  ptr
