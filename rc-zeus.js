@@ -41,7 +41,7 @@ class Zeus {
         this.programs.push(p)
         
         const id = this.programs.length
-        const name = p.metadata['name']
+        const name = p.metadata.get('name')
         this.report(`Successfully assembled warrior #${id} "${name}"`)
     }
 
@@ -52,7 +52,7 @@ class Zeus {
             const p = this.programs[i]
             
             if (p.instructions.length > this.settings.max_instructions) {
-                report(`Warrior #${1+i} "${p.metadata['name']}" is disqualified for excessive code length (${p.instructions.length}).`)
+                report(`Warrior #${1+i} "${p.metadata.get('name')}" is disqualified for excessive code length (${p.instructions.length}).`)
                 this.programs.splice(i, 1)
             }
         }
@@ -90,7 +90,7 @@ class Zeus {
         for (var p = 0; p < this.programs.length; p++) {
             const program = this.programs[p]
             const score = program.zeus_score
-            const name = program.metadata['name']
+            const name = program.metadata.get('name')
 
             max_score = max_score > score ? max_score : score
             name_l = name.length > name_l ? name.length : name_l
@@ -115,7 +115,7 @@ class Zeus {
     }
 
     run_round(round) {
-        this.core.reset()
+        this.core = new Core()
 
         for (var p in this.programs) {
             this.core.load_program(this.programs[p])
@@ -128,15 +128,17 @@ class Zeus {
         }
 
         const survivors = this.core.processes.map(p => p = {
-            name: `"${p.program.metadata['name']}"`,
+            name: `"${p.program.metadata.get('name')}"`,
             identifier: p.zeus_identifier,
         })
 
         if (survivors.length > 1) {
             const names = survivors.map(p => p = p.name).join(', ')
             this.report(`Round #${round+1} TIED after ${this.core.cycle} cycles between ${names}`)
-        } else {
+        } else if (survivors.length == 1) {
             this.report(`Round #${round+1} WON after ${this.core.cycle} cycles by ${survivors[0].name}`)
+        } else {
+            console.log('Impossibru!')
         }
         
         // calculate score by formula (w * w - 1) / s

@@ -288,19 +288,18 @@ class Preprocessor {
     }
 
     extract_metadata(lines) {
-        const metadata = []
+        const metadata = new Map()
 
         for (var idx in lines) {
             const line = lines[idx].trim()
-
             if (line.length > 1 && line[0] === ';' && line[1] !== ' ' && 
-                line.includes(' ') && line.indexOf(' ') < line.length - 1) {
+                line.includes(' ') && (line.indexOf(' ') < line.length - 1)) {
 
                 const items = line.split(' ')
                 const key = items[0].substr(1)
                 const value = items.splice(1).join(' ')
 
-                metadata[key] = value
+                metadata.set(key, value)
             }
         }
 
