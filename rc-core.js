@@ -36,7 +36,7 @@ class RAM {
     w(address, instruction) {
         address = ALU.sanitize(address)
         
-        this.memory[address] = instruction
+        this.memory[address] = instruction.copy()
         this.memory[address].write_flag = this.current_process_index
     }
     
@@ -89,11 +89,13 @@ class Core {
         if (address === undefined) {
             address = this.ram.random_address(program.instructions.length)
         }
-
+        
         if (this.processes.length == 0) {
             // first program always loads @ 0
             address = 0
         }
+        
+        console.log(`Loading program with hash ${program.hash()} at address ${address}`)
         
         const pid = this.processes.length
         this.ram.current_process_index = pid
@@ -157,19 +159,18 @@ class Core {
             // instruction could not be executed and returned null
             
             const id = this.current_process_index
-            const ts = this.current_process().num_threads()
             
-            if (ts == 0) {
+            if (this.current_process().num_threads() == 0) {
                 // remove process
                 this.processes.splice(id, 1)
                 
+                // select next process
                 if (id >= this.processes.length) {
                     this.set_current_process_index(0)
                 }
                 
                 if (this.processes.length == 1) {
-                    // we have a winner, print name: TODO
-                    // console.log(`End of Game: Process #${0} wins after ${this.cycle} cycles`)
+                    console.log(`End of Game: Process #${0} wins after ${this.cycle} cycles`)
                     this.active = false
                 }
             }
