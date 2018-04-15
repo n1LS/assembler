@@ -26,6 +26,17 @@ class Program {
         this.load_address = assembly.load_address
     }
 
+    hash() {
+        var value_sum = 0
+
+        for (var i = 0; i < this.instructions.length; i++)  {
+            const ins = this.instructions[i]
+            value_sum += ins.a.value + ins.b.value
+        }
+        
+        return `${this.instructions.length}-${this.metadata.size}-${this.load_address}-${value_sum}`
+    }
+
 }
 
 class Value {
