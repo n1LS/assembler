@@ -110,6 +110,10 @@
                 s += (`<li onclick='${function_name}("${items[i]}")'>* ${name}${action}${src}</li>`)
             }
 
+            if (items.length == 0) {
+                s += "&nbsp; None<br>"
+            }
+
             s += '</ul>'
 
             return s
@@ -181,7 +185,7 @@
 
 
         function message_handler(event) {
-            console.log('loader received: ' + event.data)
+            // console.log('loader received: ' + event.data)
         }
 
         function remove_all() {
@@ -202,14 +206,16 @@
 
     <div class='top light'>
 
-        <div class='left30 light padded'>
+        <div class='left30 padded light'>
 
             <div class='heading'>PUBLIC WARRIORS:</div>
             <span id='public'></span>
+            <br>
 
             <div class='heading'>LOCAL WARRIORS:</div>
             <span id='local'></span>
-
+            <br>
+            
             <div class='heading'>SELECTED:
                 <span class='right clickable' onclick='remove_all()'>[REMOVE ALL]</span>
             </div>

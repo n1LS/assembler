@@ -52,6 +52,7 @@
                 document.getElementById('assembler'),
                 document.getElementById('debugger'),
                 document.getElementById('match'),
+                document.getElementById('environment'),
                 ]
 
             for (var i = 0; i < items.length; i++) {
@@ -63,6 +64,7 @@
                 document.getElementById('menu-1'),
                 document.getElementById('menu-2'),
                 document.getElementById('menu-3'),
+                document.getElementById('menu-4'),
                 ]
 
             for (var i = 0; i < buttons.length; i++) {
@@ -82,11 +84,15 @@
             var data = event.data.split('::')
             const key = data.shift(0)
             const value = data.join('::')
+            
+            const f_environment = document.getElementById('environment').contentWindow 
             const f_assembler = document.getElementById('assembler').contentWindow 
             const f_debugger = document.getElementById('debugger').contentWindow 
             const f_loader = document.getElementById('loader').contentWindow 
             const f_match = document.getElementById('match').contentWindow 
             
+            const children = [f_environment, f_assembler, f_debugger, f_loader, f_match]
+
             switch (key) {
                 case 'loader':
                     f_loader.postMessage(value, '*')
@@ -104,6 +110,13 @@
                     f_match.postMessage(value, '*')
                     maximize(3)
                     break
+                case 'environment':
+                    f_environment.postMessage(value, '*')
+                    maximize(4)
+                    break
+                case 'all':
+                    children.forEach(child => child.postMessage(value, '*'))
+                    break;               
             }
         }            
 
@@ -118,6 +131,7 @@
         <div onclick='maximize(1)' class='top-button' id='menu-1'>Assembler</div>
         <div onclick='maximize(2)' class='top-button' id='menu-2'>Debugger</div>
         <div onclick='maximize(3)' class='top-button' id='menu-3'>Match</div>
+        <div onclick='maximize(4)' class='top-button' id='menu-4'>Environment</div>
         <span class='px48 yay right' style='padding-right: 16px;'>nCODE IDE v0.1</span>
     </div>
 
@@ -126,6 +140,7 @@
         <iframe class='container' id='assembler' src='assembler.htm'></iframe>
         <iframe class='container' id='loader' src='loader.htm'></iframe>
         <iframe class='container' id='match' src='match.htm'></iframe>
+        <iframe class='container' id='environment' src='environment.htm'></iframe>
     </div>
 
 </body>

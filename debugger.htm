@@ -19,7 +19,6 @@
 
     <script src="rc-core.js"></script>
     <script src="rc-math.js"></script>
-    <script src="rc-constants.js"></script>
     <script src="rc-address-modes.js"></script>
     <script src="rc-preprocessor.js"></script>
     <script src="rc-assembler.js"></script>
@@ -31,6 +30,7 @@
     <script src="canvas-font.js"></script>
 
     <script>
+        var environment = new Environment()
         var core
         var timer
         var buttons
@@ -61,7 +61,7 @@
             cycles = cycles == 1 ? 1000 : 1
         }
 
-        var memory = new Array(kCORE_MEMORY_SIZE)
+        var memory = new Array(environment.core_size)
 
         function hash(instruction) {
             return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
@@ -69,7 +69,7 @@
 
         function draw_memory_1x1(w, h) {
             for (var i = 0; i < w * h; i++) {
-                const idx = i % kCORE_MEMORY_SIZE
+                const idx = i % core.environment.core_size
                 const instruction = core.ram.memory[idx]
                 var color = kDarkGrey
 
@@ -79,7 +79,7 @@
                     color = process_colors[0][instruction.execution_flag + 1]
                 }
 
-                if (i >= kCORE_MEMORY_SIZE) {
+                if (i >= core.environment.core_size) {
                     color = draw_darken(color)
                 }
 
@@ -102,7 +102,7 @@
             }
 
             for (var i = 0; i < cols * rows; i++) {
-                const idx = i % kCORE_MEMORY_SIZE
+                const idx = i % core.environment.core_size
                 const instruction = core.ram.memory[idx]
                 var c1 = process_colors[1][instruction.write_flag + 1]
                 var c2 = process_colors[1][instruction.read_flag + 1]
@@ -136,7 +136,7 @@
             }
 
             for (var i = 0; i < num_visible; i++) {
-                const idx = i % kCORE_MEMORY_SIZE
+                const idx = i % core.environment.core_size
                 const instruction = core.ram.memory[idx]
                 const i_hash = hash(instruction)
 
@@ -153,7 +153,7 @@
                 var color1 = process_colors[2][instruction.read_flag + 1]
                 var color2 = process_colors[2][instruction.write_flag + 1]
 
-                if (i >= kCORE_MEMORY_SIZE) {
+                if (i >= core.environment.core_size) {
                     color1 = draw_darken(color1)
                     color2 = draw_darken(color2)
                 }
@@ -176,7 +176,7 @@
 
                 var color = process_colors[0][instruction.execution_flag + 1]
 
-                if (i >= kCORE_MEMORY_SIZE) {
+                if (i >= core.environment.core_size) {
                     color = draw_darken(color)
                 }
 
@@ -193,14 +193,14 @@
 
             const num_visible = cols * rows
 
-            if (num_visible < kCORE_MEMORY_SIZE) {
+            if (num_visible < core.environment.core_size) {
                 // usable sizes are 5x5 / 3x3 / 1x1
                 const sizes = [7, 6, 5, 4, 3, 1]
 
                 for (var s = 0; s < sizes.length; s++) {
                     const sz = sizes[s]
 
-                    if ((~~(w / sz) * ~~(h / sz)) >= kCORE_MEMORY_SIZE) {
+                    if ((~~(w/sz) * ~~(h/sz)) >= core.environment.core_size) {
                         if (sz == 1) {
                             draw_memory_1x1(w, h)
                         } else {
@@ -315,7 +315,8 @@
             var width = ~~(canvas.width / scale / row_height) * row_height
             var height = ~~(canvas.height / scale / row_height) * row_height
 
-            var dump_width = kMAX_ADDRESS_WIDTH + 5 + 2 * (1 + kMAX_ADDRESS_WIDTH)
+            const max_width = 2 + ('' + (core.environment.core_size - 1)).length
+            var dump_width = 4 + 3 * max_width
 
             var dx = row_height * dump_width
             var dy = 0
@@ -360,7 +361,7 @@
             const ni = core.next_instruction();
 
             if (ni !== null) {
-                draw_text(0, dy, `NEXT ${ni.to_string()}`, c)
+                draw_text(0, dy, `NEXT ${ni.to_string(max_width - 1)}`, c)
             }
 
             dy += row_height
@@ -438,7 +439,7 @@
         }
 
         function init_everything() {
-            core = new Core()
+            core = new Core(environment)
 
             var code0 =
                 `
@@ -632,8 +633,8 @@ last    jmp 0              ;and loop forever
         end start
 `
             // init both prpgrams
-            core.load_program(new Program(code_imp))
-            core.load_program(new Program(code_imp))
+            core.load_program(new Program(code_imp, core.environment))
+            core.load_program(new Program(code_imp, core.environment))
 
             draw(true)
 
@@ -667,6 +668,11 @@ last    jmp 0              ;and loop forever
                 case 'launch':
                     load(items)
                     break
+    
+                case 'environment':
+                    core = new Core(JSON.parse(atob(items[0])))
+                    draw(true)
+                    break
             }
         }
 
@@ -675,7 +681,7 @@ last    jmp 0              ;and loop forever
 
             warriors.forEach(base64 => {
                 code = atob(base64)
-                core.load_program(new Program(code))
+                core.load_program(new Program(code, core.environment))
             })
 
             draw(1)

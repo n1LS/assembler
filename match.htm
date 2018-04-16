@@ -14,7 +14,6 @@
     <script src='rc-zeus.js'></script>
     <script src='rc-core.js'></script>
     <script src='rc-math.js'></script>
-    <script src='rc-constants.js'></script>
     <script src='rc-address-modes.js'></script>
     <script src='rc-preprocessor.js'></script>
     <script src='rc-assembler.js'></script>
@@ -30,7 +29,7 @@
         var zeus
 
         function init() {
-            zeus = new Zeus()
+            zeus = new Zeus(new Environment())
 
             const self = this
             zeus.on_log = function (msg) {
@@ -44,10 +43,14 @@
         function message_handler(event) {
             items = event.data.split('::')
             action = items.shift(0)
+            
 
             switch (action) {
                 case 'load':
                     load_warriors(items)
+                    break
+                case 'environment':
+                    zeus.environment = JSON.parse(atob(items[0]))
                     break
             }
         }
@@ -99,63 +102,6 @@
 <body onload='init()'>
 
     <div class='top light'>
-
-        <div class='left30 light padded'>
-
-            <table>
-                <tr>
-                    <td>
-                        <label for='num-cycles'>Max. number of cycles</label>
-                    </td>
-                    <td>
-                        <input type='number' id='num-cycles' value='80000'>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for=''>Number of rounds</label>
-                    </td>
-                    <td>
-                        <input type='number' id='' value='10'>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for=''>Core size</label>
-                    </td>
-                    <td>
-                        <input type='number' id='' value='4000'>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for=''>Max. code length</label>
-                    </td>
-                    <td>
-                        <input type='number' id='' value='100'>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for=''>P-space size</label>
-                    </td>
-                    <td>
-                        <input type='number' id='' value='500'>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for=''>Max. processes</label>
-                    </td>
-                    <td>
-                        <input type='number' id='' value='128'>
-                    </td>
-                </tr>
-            </table>
-
-        </div>
-
-        <div class='v-spacer'></div>
 
         <div>
             <pre id='log' class='padded code'><b>nCODE IDE v0.1 MATCH CONSOLE</b><br></pre>

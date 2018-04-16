@@ -23,7 +23,7 @@ String.prototype.insert = function(index, string) {
     }
 }
 
-function number_text(text) {
+function number_text(text, syntax_coloring) {
     text = text.replace(/;/g, '\x1e').html()
     const lines = text.split('\n')
 
@@ -37,7 +37,11 @@ function number_text(text) {
 
         if (line.includes('\x1e')) {
             const idx = line.indexOf('\x1e')
-            line = line.insert(idx, '<span class="comment">') + '</span>'
+            
+            if (syntax_coloring) {
+                line = line.insert(idx, '<span class="comment">') + '</span>'
+            }
+            
             line = line.replace(/\x1e/g, ';')
         }
 

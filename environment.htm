@@ -1,0 +1,133 @@
+<html>
+
+<head>
+    <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
+
+    <style>
+        #log {
+            overflow: scroll;
+            height: calc(100% - 16px);
+        }
+    </style>
+
+    <script src='rc-zeus.js'></script>
+    <script src='rc-core.js'></script>
+    <script src='rc-math.js'></script>
+    <script src='rc-address-modes.js'></script>
+    <script src='rc-preprocessor.js'></script>
+    <script src='rc-assembler.js'></script>
+    <script src='rc-classes.js'></script>
+    <script src='rc-instruction-set.js'></script>
+    <script src='rc-instruction.js'></script>
+
+    <script src='ui-common.js'></script>
+
+    <script>
+
+        var environment = new Environment()
+
+        function init() {
+            // listen to messages from parent window
+            window.addEventListener('message', message_handler, false)
+        }
+
+        function message_handler(event) {
+        }
+
+        function value_for(x) {
+            return document.getElementById(x).value
+        }
+
+        function update_environment() {
+            environment.core_size = value_for('core_size')
+            environment.num_rounds = value_for('num_rounds')
+            environment.max_cycles = value_for('max_cycles')
+            environment.max_threads = value_for('max_threads')
+            environment.p_space_size = value_for('p_space_size')
+            environment.max_instructions = value_for('max_instructions')
+
+            const json = btoa(JSON.stringify(environment))
+            window.parent.postMessage(`all::environment::${json}`, '*')
+        }
+
+    </script>
+</head>
+
+<body onload='init()'>
+
+    <div class='top light'>
+
+        <table>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th>'88 Default</th>
+            </tr>
+            <tr>
+                <td>
+                    <label for='max_cycles'>Max. number of cycles</label>
+                </td>
+                <td>
+                    <input type='number' id='max_cycles' value='80000' onchange='update_environment()'>
+                </td>
+                <td>80000</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='num_rounds'>Number of rounds</label>
+                </td>
+                <td>
+                    <input type='number' id='num_rounds' value='100' onchange='update_environment()'>
+                </td>
+                <td>100</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='core_size'>Core size</label>
+                </td>
+                <td>
+                    <input type='number' id='core_size' value='4000' onchange='update_environment()'>
+                </td>
+                <td>8000</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='max_instructions'>Max. code length</label>
+                </td>
+                <td>
+                    <input type='number' id='max_instructions' value='100' onchange='update_environment()'>
+                </td>
+                <td>100</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='p_space_size'>P-space size</label>
+                </td>
+                <td>
+                    <input type='number' id='p_space_size' value='500' onchange='update_environment()'>
+                </td>
+                <td>500</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='max_threads'>Max. number of threads</label>
+                </td>
+                <td>
+                    <input type='number' id='max_threads' value='8000' onchange='update_environment()'>
+                </td>
+                <td>8000</td>
+            </tr>
+        </table>
+
+    </div>
+
+    <div class='toolbar'>
+        <input type='button' value='PUBLISH NEW SETTINGS' onclick='run()'>
+        <input type='button' value='DEFAULT SETTINGS' onclick=''>
+    </div>
+
+
+</body>
+
+</html>

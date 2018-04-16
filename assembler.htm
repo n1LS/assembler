@@ -35,7 +35,7 @@
             bottom: 25%;
             width: 5em;
             height: 12px;
-            background: #404040;
+            background: #202020;
             position: absolute;
         }
 
@@ -65,7 +65,6 @@
 
     <script src='rc-core.js'></script>
     <script src='rc-math.js'></script>
-    <script src='rc-constants.js'></script>
     <script src='rc-address-modes.js'></script>
     <script src='rc-preprocessor.js'></script>
     <script src='rc-assembler.js'></script>
@@ -78,13 +77,14 @@
     <script>
 
         var modified = false
+        var environment = new Environment()
 
         function preprocess() {
             var code = document.getElementById('editor').value
             var prepro = new Preprocessor()
-            var output = prepro.preprocess(code)
+            var output = prepro.preprocess(code, environment)
 
-            var content = number_text(output.code)
+            var content = number_text(output.code, true)
             document.getElementById('preprocessor_output').innerHTML = content
 
             html = '<span class="gray">'
@@ -106,19 +106,19 @@
 
         function assemble(code) {
             var assembler = new Assembler()
-            var output = assembler.assemble(code)
-            var content = number_text(output.listing)
+            var output = assembler.assemble(code, environment)
+            var content = number_text(output.listing, false)
 
             document.getElementById('assembler_output').innerHTML = content
 
             var html = '<br><span class="gray">'
 
             if (output.errors.length) {
-                html += `\n<b>ERRORS:</b>\n${output.errors.join('\n').html()}</b>\n\n`
+                html += `\n<b>ASSEMBLER ERRORS:</b>\n${output.errors.join('\n').html()}</b>\n\n`
             }
 
             if (output.warnings.length) {
-                html += `<i>WARNINGS:</i>\n${output.warnings.join('\n').html()}`
+                html += `<i>ASSEMBLER WARNINGS:</i>\n${output.warnings.join('\n').html()}`
             }
 
             html += '</span>'
@@ -205,6 +205,12 @@
                     document.getElementById('editor').value = atob(items[0])
                     changed()
                     break
+
+                case 'environment':
+asd                    
+                    core = new Core(JSON.parse(atob(items[0])))
+                    draw(true)
+                    break                    
             }
         }
 
