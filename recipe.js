@@ -1,66 +1,50 @@
 //@import rc-core.js
+//@import rc-zeus.js
 //@import rc-math.js
 //@import rc-classes.js
 //@import rc-assembler.js
-//@import rc-constants.js
 //@import rc-instruction.js
 //@import rc-preprocessor.js
 //@import rc-address-modes.js
 //@import rc-instruction-set.js
 
-var core = new Core()
+const environment = new Environment()
 
-// load first program
+function clock(start) {
+    if (!start) {
+        return process.hrtime()
+    }
+
+    var end = process.hrtime(start)
+    return Math.round((end[0] * 1000) + (end[1] / 1000000))
+}
 
 var code_1 = 
-`; dwarf 
+`;name dwarf 
  ADD #4, 3
  MOV 2, @2
  JMP -2
 `
-var program_1 = new Program(code_1)
-
-core.load_program(program_1, 0, 4000)
-
-// load second program
-
 var code_2 = 
-`; stone
+`;name stone
     MOV <2, 3        
     ADD 3, -1
     JMP -2, 0
     DAT #0, #0
     DAT #-5084, #5084
 `
-/*
-` ; imp
- mov 0 1
-`
-*/
-var program_2 = new Program(code_2)
+const zeus = new Zeus(new Environment())
 
-core.load_program(program_2, 1, 0)
+zeus.load_code(code_2)
+zeus.load_code(code_1)
 
-// run run run
+const start = clock()
+const cycles = zeus.run()
+const duration = ~~clock(start)
+const mips = ~~((cycles / 10) / duration) / 100
 
-console.log(core.memory_dump(0, 20).join('\n'))
-console.log()
-
-var num_cycles = 1000000
-
-console.log(`Running ${num_cycles} cycles...`)
-
-var done = false
-
-for (var i = 0; i < num_cycles; i++) {
-    if (!core.step()) {
-        break
-    }
-}
-
-console.log()
-console.log(core.memory_dump(0, 20).join('\n'))
+console.log(`Ran ${cycles} cycles in ${duration} ms, ${mips} MIPS.`)
 
 // done
-'Done. No crash. Yay!'
+'🎉  Done. No crash. Yay!'
 

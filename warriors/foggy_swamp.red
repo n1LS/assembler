@@ -16,7 +16,7 @@ away    equ     -2200
 
 front
 top     mov     bomb,   <ptr
-a       add     inc,    scan
+also    add     inc,    scan
 scan    cmp     -3*step+5,  -3*step
         mov     scan,   @-3
         jmn     top,    @-3

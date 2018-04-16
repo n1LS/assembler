@@ -3,11 +3,17 @@
 - debug tools (watches, breakpoints)
 - 'someone died' / 'winner' popup
 
+# Preprocessor
+
+- support for FOR/ROF blocks
+- allow label-only-lines
+- asserts
+
 # Logic
 
-- round counter / maximum number of steps before auto-stop (zeus)
+- tournament mode (zeus called by )
 - winner/score calculation (zeus)
-- preprocessor needs the current settings, so building w/o known parameters is somewhere between incorrect and not doable
+- preprocessor needs the current environment, so building w/o known parameters is somewhere between incorrect and not doable
 
 # Refactoring
 
