@@ -1,6 +1,7 @@
 agony.red
 dwarf.red
 fail.red
+foggy_swamp.red
 idle.red
 imp.red
 mice.red
