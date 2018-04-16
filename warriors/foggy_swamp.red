@@ -120,4 +120,4 @@ boot    mov     ptr,    away
         mov     ptr-8,  <boot
         mov     ptr-9,  <boot
         jmp     @boot,  <boot
-end     qscan
+        end     qscan
