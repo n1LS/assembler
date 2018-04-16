@@ -35,14 +35,18 @@ class Instruction {
 
     //* boring io stuff ********************************************************
 
-    to_string() {
+    to_string(address_width) {
+        if (address_width === undefined) {
+            address_width = 5
+        }
+
         function padl(l, x) {
             var s = '' + x
             while (s.length < l) s = ' ' + s
             return s
         }
 
-        var out = `${this.op.name} ${address_mode_name(this.a.mode)}${padl(kMAX_ADDRESS_WIDTH, this.a.value)} ${address_mode_name(this.b.mode)}${padl(kMAX_ADDRESS_WIDTH, this.b.value)}`
+        var out = `${this.op.name} ${address_mode_name(this.a.mode)}${padl(address_width, this.a.value)} ${address_mode_name(this.b.mode)}${padl(address_width, this.b.value)}`
 
         return out
     }
@@ -50,8 +54,8 @@ class Instruction {
     to_short_string() {
         var out = this.op.short_name
         
-        out += addr_names.get(this.a.mode).short + i2s_s(this.a.value, 3)
-        out += addr_names.get(this.b.mode).short + i2s_s(this.b.value, 3)
+        out += addr_names.get(this.a.mode).short + i2s_s(this.a.value, 4)
+        out += addr_names.get(this.b.mode).short + i2s_s(this.b.value, 4)
 
         return out
     }

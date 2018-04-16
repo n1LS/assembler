@@ -1,8 +1,21 @@
+class Environment {
+
+    constructor () {
+        this.max_instructions   = 100
+        this.core_size          = 4000
+        this.max_threads        = 128
+        this.num_rounds         = 100
+        this.max_cycles         = 80000
+        this.p_space_size       = 500
+    }
+
+}
+
 class Program {
 
-    constructor(code) {
+    constructor(code, environment) {
         var preprocessor = new Preprocessor()
-        var output = preprocessor.preprocess(code)
+        var output = preprocessor.preprocess(code, environment)
 
         this.metadata = output.metadata
         this.errors = output.errors
@@ -13,7 +26,7 @@ class Program {
         }
         
         var assembler = new Assembler()
-        var assembly = assembler.assemble(output.code)
+        var assembly = assembler.assemble(output.code, environment)
         
         this.errors.concat(assembly.errors)
         this.warnings.concat(assembly.warnings)
@@ -24,6 +37,7 @@ class Program {
         
         this.instructions = assembly.code
         this.load_address = assembly.load_address
+        this.code = code
     }
 
     hash() {
@@ -34,7 +48,7 @@ class Program {
             value_sum += ins.a.value + ins.b.value
         }
         
-        return `${this.instructions.length}-${this.metadata.size}-${this.load_address}-${value_sum}`
+        return `Ix${this.instructions.length}${this.metadata.size}${this.load_address}${value_sum}`
     }
 
 }
@@ -59,9 +73,10 @@ class Value {
 
 class Process {
 
-    constructor(program) {
+    constructor(program, max_processes) {
         this.program = program
         this.instruction_pointers = []
+        this.max_processes = max_processes
     }
 
     num_threads() {
@@ -73,7 +88,7 @@ class Process {
     }
     
     push(address) {
-        if (this.instruction_pointers.length < kMAX_PROCESS_COUNT) {
+        if (this.instruction_pointers.length < this.max_processes) {
             this.instruction_pointers.push(ALU.sanitize(address))
         }
     }

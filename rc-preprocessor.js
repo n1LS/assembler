@@ -5,7 +5,6 @@ class Preprocessor {
     constructor() {
         this.warnings = null
         this.errors = null
-        this.directions = null
     }
 
     strip_lines(lines) {
@@ -53,7 +52,31 @@ class Preprocessor {
             var o_l = instructions[i].original_line
             var ins = instructions[i].text
             var idx = instructions[i].line
-            var items = ins.replace(',', ' ').replace(/\s+|\t+/g, ' ').split(' ')
+            
+            // remove multiple spaces
+            ins = ins.replace(/\s+|\t+/g, ' ')
+            
+            // there's a few options here. If there is no comma separating the 
+            // operands, there cannot be any spaces in the command (spaces 
+            // displayed as _ in the examples below):
+            // mov_(1+label)_0         works (space as divider, no comma)
+            // mov_(1_+_label),_0      works (comma as divider)
+            // mov_(1_+_label)_0       fails (no comma but spaces)
+
+            if (ins.includes(',')) {
+                // comma separated -> X_Y_A,B
+                var x = ins.indexOf(' ')
+                ins = ins.substr(0, x) + ',' + ins.substr(x + 1)
+                x = ins.indexOf(' ')
+                ins = ins.substr(0, x) + ',' + ins.substr(x + 1)
+                ins = ins.replace(/\s+/g, '')
+
+                var items = ins.split(',')
+            }
+            else {
+                // no comma -> split on space
+                var items = ins.split(' ')
+            }
 
             for (var q = items.length - 1; q >= 0; q--) {
                 if (typeof items[q] == 'undefined') {
@@ -61,10 +84,7 @@ class Preprocessor {
                 }
             }
 
-            if (items.length < 2) {
-                this.errors.push(`E001: Too few tokens on line ${o_l} '${ins}'`)
-            }
-            else {
+            if (items.length > 1) {
                 var op = null
 
                 // find opcode
@@ -99,16 +119,12 @@ class Preprocessor {
 
     join_instructions(instructions) {
         for (var i = 0; i < instructions.length; i++) {
-            var ins = instructions[i]
-            instructions[i] = ins.instruction.join('\t')
+            instructions[i] = instructions[i].instruction.join('\t')
         }
-
-        // insert all directions at the head
-        instructions.splice(0, 0, ...this.directions)
     }
 
     make_valid_label(text) {
-        // labels can only be upper-case letters 65 'A' - 90 'Z' and numbers 
+        // labels can only be upper-case letters and numbers 
         return text.replace(/[^\x41-\x5A_\x30-\x39]/g, '')
     }
 
@@ -121,21 +137,23 @@ class Preprocessor {
     }
 
     resolve_label(offset, text, labels, equs) {
-        var keys = Array.from(labels.keys()).sort((a, b) => { 
-            return b.length - a.length })
+        var all = new Map()
 
-        keys.forEach(key => {
-            while (text.includes(key)) {
-                text = text.replace(key, `(${labels.get(key) - offset})`)
-            }
+        labels.forEach((value, key) => {
+            all.set(key, value - offset)
         })
 
-        var keys = Array.from(equs.keys()).sort((a, b) => { 
-            return b.length - a.length })
+        equs.forEach((value, key) => {
+            all.set(key, value)
+        })
 
-        keys.forEach(key => {
+        var idents = Array.from(all.keys()).sort((a, b) => { 
+            return b.length - a.length 
+        })
+
+        idents.forEach(key => {
             while (text.includes(key)) {
-                text = text.replace(key, `(${equs.get(key)})`)
+                text = text.replace(key, `(${all.get(key)})`)
             }
         })
 
@@ -173,7 +191,13 @@ class Preprocessor {
             }
         }
 
-        instructions = instructions.filter(n => n != null); 
+        for (var n = instructions.length - 1; n >= 0; n--) {
+            const ins = instructions[n]
+            
+            if (ins == null || ins.instruction.length == 1) {
+                instructions.splice(n, 1)
+            }
+        }
 
         this.resolve_equs(equs, labels)
         
@@ -186,14 +210,14 @@ class Preprocessor {
                 comp[2] = this.resolve_label(ins.line, comp[2], labels, equs)
             }
             else {
-                comp.push(default_dummy_data)
+                comp.push(default_data)
             }
 
             if (comp.length > 3) {
                 comp[3] = this.resolve_label(ins.line, comp[3], labels, equs)
             }
             else {
-                comp.push(default_dummy_data)
+                comp.push(default_data)
             }
 
             // strip label
@@ -205,25 +229,23 @@ class Preprocessor {
         var counter = 0
 
         for (var i = 0; i < lines.length; i++) {
-            var line = lines[i]
+            const line = lines[i]
             var pseudo = false
 
+            if (line.instruction.length == 1) {
+                // label only, count, but do not increase counter
+                line.line = counter
+                continue
+            }
+
             // check for pseudo op codes
-            for (var p in kPSEUDO_OPCODES) {
-                var p_op = kPSEUDO_OPCODES[p]
-
-                if (line.instruction[1] == p_op) {
-                    pseudo = true
-                    break
-                }
-            }
-
-            if (pseudo) {
+            if (kPSEUDO_OPCODES.includes(line.instruction[1])) {
                 line.line = 0
-            } else {
-                line.line = counter;
-                counter++
+                continue
             }
+
+            line.line = counter;
+            counter++
         }
     }
 
@@ -234,7 +256,7 @@ class Preprocessor {
         for (var i = 0; i < address.length; i++) {
             if (!valid_chars.includes(address.charAt(i))) {
                 this.errors.push(`E002: Unknown label in address '${address}'`)
-                return default_dummy_data;
+                return default_data;
             }
         }
 
@@ -277,7 +299,7 @@ class Preprocessor {
 
     strip_to_ascii(code) {
         var len = code.length
-        var ascii = code = code.replace(/[^\x00-\x7F]/g, '')
+        var ascii = code.replace(/[^\x00-\x7F]/g, '')
         var diff = len - ascii.length
 
         if (len != ascii.length) {
@@ -310,7 +332,6 @@ class Preprocessor {
         var instructions = new Array()
         this.warnings = new Array()
         this.errors = new Array()
-        this.directions = new Array()
 
         // strip all non-ascii characters
         code = this.strip_to_ascii(code)
@@ -333,7 +354,6 @@ class Preprocessor {
 
         // parse labels
         this.replace_labels(components)
-        components = components.filter(n => n != null); 
         
         // evaluate address arithmetic
         this.evaluate_addresses(components)
@@ -343,6 +363,9 @@ class Preprocessor {
 
         // join the lines
         var output = components.join('\n')
+
+        // todo add warnings for missing "obligatory" metadata (name, author, 
+        // redode version)
 
         return {
             code: output,

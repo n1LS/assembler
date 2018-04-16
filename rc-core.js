@@ -1,27 +1,28 @@
 class ALU {
-    constructor() {}
     
     static normalize(address) {
-        const val = address % kCORE_MEMORY_SIZE
+        const val = address % ALU.core_size
         return val
     }
 
     static sanitize(address) {
-        const val = (address + kCORE_MEMORY_SIZE_UPPER) % kCORE_MEMORY_SIZE
-        return val
+        const cs = ALU.core_size
+        return (address + cs * cs) % cs
     }
 }
 
 class RAM {
-    constructor() {
+    constructor(environment) {
         this.current_process_index = -1
-        
-        this.memory = new Array(kCORE_MEMORY_SIZE)
+        this.environment = environment
+
         this.clear()
     }
     
     clear() {
-        for (var a = 0; a < kCORE_MEMORY_SIZE; a++) {
+        this.memory = []
+
+        for (var a = 0; a < this.environment.core_size; a++) {
             this.memory[a] = new Instruction(DAT, null, null)
         }
     }
@@ -36,7 +37,14 @@ class RAM {
     w(address, instruction) {
         address = ALU.sanitize(address)
         
-        this.memory[address] = instruction.copy()
+        // copy values individually to prevent override
+        this.memory[address].a.mode = instruction.a.mode
+        this.memory[address].a.value = instruction.a.value
+        this.memory[address].b.mode = instruction.b.mode
+        this.memory[address].b.value = instruction.b.value
+        
+        this.memory[address].op = instruction.op
+
         this.memory[address].write_flag = this.current_process_index
     }
     
@@ -63,9 +71,13 @@ class RAM {
 
 class Core {
 
-    constructor() {
+    constructor(environment) {
+        ALU.core_size = environment.core_size
+
+        this.environment = environment
+
         this.cu = new ControlUnit()
-        this.ram = new RAM()
+        this.ram = new RAM(environment)
         
         this.reset()
     }
@@ -86,16 +98,14 @@ class Core {
     }
     
     load_program(program, address) {
-        if (address === undefined) {
+        if (this.processes.length == 0) {
+            // first program always loads at address 0
+            address = 0
+        } 
+        else if (address === undefined) {
+            // generate random address if none is specified
             address = this.ram.random_address(program.instructions.length)
         }
-        
-        if (this.processes.length == 0) {
-            // first program always loads @ 0
-            address = 0
-        }
-        
-        console.log(`Loading program with hash ${program.hash()} at address ${address}`)
         
         const pid = this.processes.length
         this.ram.current_process_index = pid
@@ -104,7 +114,7 @@ class Core {
             this.ram.w(a + address, program.instructions[a])
         }
         
-        this.processes[pid] = new Process(program)
+        this.processes[pid] = new Process(program, this.environment.max_threads)
         this.processes[pid].push(address + program.load_address)
     }
     
@@ -170,7 +180,7 @@ class Core {
                 }
                 
                 if (this.processes.length == 1) {
-                    console.log(`End of Game: Process #${0} wins after ${this.cycle} cycles`)
+                    // console.log(`End of Game: Process #${0} wins after ${this.cycle} cycles`)
                     this.active = false
                 }
             }
@@ -196,7 +206,7 @@ class Core {
     }
     
     dump() {
-        return this.memory_dump(0, kCORE_MEMORY_SIZE)
+        return this.memory_dump(0, core.environment.core_size)
     }
     
     print_memory(start, end) {
@@ -216,11 +226,13 @@ class Core {
         
         var output = new Array()
         
+        const max_width = ('' + (core.environment.core_size - 1)).length
+
         for (var a = start; a < end; a++) {
             var addr = ALU.sanitize(a)
             var i = this.ram.memory[addr]
 
-            var out = padln(addr, kMAX_ADDRESS_WIDTH - 1) + ' ' + i.to_string()
+            var out = padln(addr, max_width) + ' ' + i.to_string(max_width + 1)
             output.push(out)
         }
         

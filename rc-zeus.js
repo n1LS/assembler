@@ -1,34 +1,25 @@
-class Settings {
-
-    constructor () {
-        this.max_instructions   = 100
-        this.core_size          = 4000
-        this.max_threads        = 128
-        this.num_rounds         = 100
-        this.max_cycles         = 80000
-        this.p_space_size       = 500
-    }
-
-}
-
 class Zeus {
 
-    constructor() {
-        this.core = new Core()
+    constructor(environment) {
+        this.environment = environment
+        this.core = new Core(environment)
         this.reset()
     }
 
     reset() {
         this.programs = []
-        this.settings = new Settings()
+        this.environment = new Environment()
     }
 
-    set_settings(settings) {
-        this.settings = settings
+    set_environment(environment) {
+        this.environment = environment
+
+        // updating is too hard. let's just make a new one
+        this.core = new Core(environment)
     }
 
     load_code(code) {
-        const p = new Program(code)
+        const p = new Program(code, this.environment)
         
         if (p.errors.length) {
             this.report(`Warrior failed to assemble`)
@@ -51,7 +42,7 @@ class Zeus {
         for (var i = this.programs.length - 1; i >= 0; i--) {
             const p = this.programs[i]
             
-            if (p.instructions.length > this.settings.max_instructions) {
+            if (p.instructions.length > this.environment.max_instructions) {
                 report(`Warrior #${1+i} "${p.metadata.get('name')}" is disqualified for excessive code length (${p.instructions.length}).`)
                 this.programs.splice(i, 1)
             }
@@ -59,7 +50,9 @@ class Zeus {
     }
 
     report(message) {
-        this.on_log(message)
+        if (this.on_log) {
+            this.on_log(message)
+        }
     }
 
     shuffle_programs() {
@@ -73,10 +66,12 @@ class Zeus {
         var cycles = 0
         
         for (var i = 0; i < this.programs.length; i++) {
+            const code = this.programs[i].code
+            this.programs[i] = new Program(code, this.environment)
             this.programs[i].zeus_score = 0
         }
         
-        for (var round = 0; round < this.settings.num_rounds; round++) {
+        for (var round = 0; round < this.environment.num_rounds; round++) {
             cycles += this.run_round(round)
             this.shuffle_programs()
         }
@@ -90,7 +85,11 @@ class Zeus {
         for (var p = 0; p < this.programs.length; p++) {
             const program = this.programs[p]
             const score = program.zeus_score
-            const name = program.metadata.get('name')
+            var name = program.metadata.get('name')
+
+            if (name === undefined) {
+                name = `Unnamed-${p}`
+            }
 
             max_score = max_score > score ? max_score : score
             name_l = name.length > name_l ? name.length : name_l
@@ -115,13 +114,13 @@ class Zeus {
     }
 
     run_round(round) {
-        this.core = new Core()
+        this.core.reset()
 
         for (var p in this.programs) {
             this.core.load_program(this.programs[p])
         }
 
-        for (var cycle = 0; cycle < this.settings.max_cycles; cycle++) {
+        for (var cycle = 0; cycle < this.environment.max_cycles; cycle++) {
             if  (!this.core.step()) {
                 break;
             }
