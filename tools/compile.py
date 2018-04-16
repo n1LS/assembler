@@ -50,6 +50,6 @@ replacements = {
 for key, value in replacements.items():
     code = code.replace(key, value)
 
-print("\nRunning code:\n")
+print("\nRunning code:")
 
 os.system("node -p \"" + code + "\"")
