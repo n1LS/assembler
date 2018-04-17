@@ -35,11 +35,24 @@ function number_text(text, syntax_coloring) {
 
         var line = lines[i]
 
+        if (syntax_coloring) {
+            line = line.replace(/\bequ\b/gi, '<span class="keyword">$&</span>')
+            line = line.replace(/\bend\b/gi, '<span class="keyword">$&</span>')
+            line = line.replace(/-?\b\d+/g, '<span class="number">$&</span>')
+
+            var re = new RegExp(`\\b(${__op_regex})\\b`, 'gi')
+            line = line.replace(re, '<span class="opcode">$&</span>')
+
+            line = line.replace(/\B(@|#|\$|\*|&gt;|&lt;|{|})/g, '<span class="address_mode">$&</span>')
+        }
+
         if (line.includes('\x1e')) {
             const idx = line.indexOf('\x1e')
             
             if (syntax_coloring) {
-                line = line.insert(idx, '<span class="comment">') + '</span>'
+                const pre = line.substring(0, idx)
+                const post = line.substring(idx).replace(/<(?:.|\n)*?>/gm, '')
+                line = `${pre}<span class='comment'>${post}</span>`
             }
             
             line = line.replace(/\x1e/g, ';')

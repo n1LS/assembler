@@ -14,7 +14,9 @@
     </style>
 
     <script src='ui-common.js'></script>
-
+    <script src='rc-instruction-set.js'></script>
+    <script src='rc-address-modes.js'></script>
+    
     <script>
 
         var selected = []
@@ -80,11 +82,7 @@
         function show(item) {
             load(item, function (data) {
                 current_code = data;
-
-                const content = number_text(data)
-                
-                document.getElementById('code').innerHTML = content
-
+                document.getElementById('code').innerHTML = number_text(data, true)
             })
         }
 
@@ -98,16 +96,14 @@
 
             for (var i = 0; i < items.length; i++) {
                 const texts = items[i].split(':')
-                const name = texts[1]
-                const source = texts[0]
                 var action = ''
 
                 if (alt_function !== undefined) {
                     action = `<span class='right clickable' onclick='${alt_function[0]}("${items[i]}")'> ${alt_function[1]}</span>`
                 }
 
-                var src = show_source ? `<span class='right small'>${source}</span>` : ''
-                s += (`<li onclick='${function_name}("${items[i]}")'>* ${name}${action}${src}</li>`)
+                var src = show_source ? `<span class='right small'>${texts[0]}</span>` : ''
+                s += (`<li onclick='${function_name}("${items[i]}")'>* ${texts[1]}${action}${src}</li>`)
             }
 
             if (items.length == 0) {
@@ -184,9 +180,7 @@
         }
 
 
-        function message_handler(event) {
-            // console.log('loader received: ' + event.data)
-        }
+        function message_handler(event) { }
 
         function remove_all() {
             code = []
@@ -196,7 +190,7 @@
         }
 
         function move_to_assembler() {
-            window.parent.postMessage('assembler::load::' + btoa(current_code), '*')
+            window.parent.postMessage(`assembler::load::${btoa(current_code)}`, '*')
         }
 
     </script>

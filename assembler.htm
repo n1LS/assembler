@@ -26,14 +26,14 @@
 
         #editor-nol {
             float: left;
-            width: 4em;
+            width: 40px;
             text-align: right;
-            padding-right: 1em;
+            padding-right: 8px;
         }
 
         #blank-out {
             bottom: 25%;
-            width: 5em;
+            width: 48px;
             height: 12px;
             background: #202020;
             position: absolute;
@@ -47,7 +47,7 @@
         #editor {
             overflow: scroll;
             white-space: nowrap;
-            width: calc(100% - 5em);
+            width: calc(100% - 48px);
         }
 
         #assembler_output {
@@ -57,10 +57,15 @@
 
         #log {
             clear: both;
-            height: calc(25% - 32px);
+            height: calc(25% - 30px); /* oddness */
             overflow: scroll;
             background: #101010;
         }
+
+        .local-width {
+            width: calc(20% - 16px);
+        }
+
     </style>
 
     <script src='rc-core.js'></script>
@@ -194,7 +199,7 @@
             const code = btoa(document.getElementById('editor').value)
 
             window.parent.postMessage(`debugger::launch::${code}`, '*')
-        }   
+        }
 
         function message_handler(event) {
             items = event.data.split('::')
@@ -207,10 +212,9 @@
                     break
 
                 case 'environment':
-asd                    
-                    core = new Core(JSON.parse(atob(items[0])))
-                    draw(true)
-                    break                    
+                    environment = JSON.parse(atob(items[0]))
+                    changed()
+                    break
             }
         }
 
@@ -220,12 +224,15 @@ asd
 
 <body onload='init()'>
 
-        <div id='container-top' class='no-overflow'>
-            <div class='left50 h100 no-overflow'>
+    <div class='top' style='background:red;'>
+
+        <div id='container-top' class='code'>
+            <div class='left50'>
                 <h1>Source code</h1>
                 <div id='editor-nol' class='code num'></div>
                 <div id='blank-out' class='code'></div>
-                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='code' onkeyup='changed()' onscroll='scrolled()'>
+                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='code' onkeyup='changed()'
+                    onscroll='scrolled()'>
 ;redcode-88
 ;author your_name_here
         org start
@@ -233,26 +240,32 @@ start   mov $1,     $1
 dummy   dat #0,     #0</textarea>
             </div>
 
-            <div div class='left30 h100'>
+            <div class='v-spacer'></div>
+            
+            <div class='left30'>
                 <h1>Preprocessor output / Load file</h1>
                 <pre id='preprocessor_output' class='code'>preprocessor output</pre>
             </div>
 
-            <div class='left20 h100'>
+            <div class='v-spacer'></div>
+
+            <div class='left local-width'>
                 <h1>Assembly listing</h1>
                 <pre id='assembler_output' class='code'>assembler output</pre>
             </div>
 
         </div>
 
-        <pre id='log' class='monospace'></pre>
+        <pre id='log'></pre>
 
-        <div class='toolbar'>
-            <input type='button' value='ASSEMBLE' onclick='changed()'>
-            <input type='button' value='WRITE TO LOCAL STORAGE' onclick='save()' id='save_button'>
-            <input type='text' placeholder='WARRIOR NAME' id='name'>
-            <input type='button' value='SELECTED to DEBUGGER' onclick='debug()' class='right'>
-        </div>
+    </div>
+
+    <div class='toolbar'>
+        <input type='button' value='ASSEMBLE' onclick='changed()'>
+        <input type='button' value='WRITE TO LOCAL STORAGE' onclick='save()' id='save_button'>
+        <input type='text' placeholder='WARRIOR NAME' id='name'>
+        <input type='button' value='SELECTED to DEBUGGER' onclick='debug()' class='right'>
+    </div>
 
 </body>
 

@@ -11,15 +11,7 @@
         }
     </style>
 
-    <script src='rc-zeus.js'></script>
-    <script src='rc-core.js'></script>
-    <script src='rc-math.js'></script>
-    <script src='rc-address-modes.js'></script>
-    <script src='rc-preprocessor.js'></script>
-    <script src='rc-assembler.js'></script>
     <script src='rc-classes.js'></script>
-    <script src='rc-instruction-set.js'></script>
-    <script src='rc-instruction.js'></script>
 
     <script src='ui-common.js'></script>
 
@@ -28,15 +20,18 @@
         var environment = new Environment()
 
         function init() {
-            // listen to messages from parent window
             window.addEventListener('message', message_handler, false)
         }
 
-        function message_handler(event) {
-        }
+        function message_handler(event) { }
 
         function value_for(x) {
             return document.getElementById(x).value
+        }
+
+        function return_to_defaults() {
+            environment = new Environment()
+            update_environment();
         }
 
         function update_environment() {
@@ -58,7 +53,7 @@
 
     <div class='top light'>
 
-        <table>
+        <table class='padded'>
             <tr>
                 <th>Key</th>
                 <th>Value</th>
@@ -124,7 +119,7 @@
 
     <div class='toolbar'>
         <input type='button' value='PUBLISH NEW SETTINGS' onclick='run()'>
-        <input type='button' value='DEFAULT SETTINGS' onclick=''>
+        <input type='button' value='DEFAULT SETTINGS' onclick='return_to_defaults()'>
     </div>
 
 
