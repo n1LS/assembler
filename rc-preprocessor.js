@@ -1,5 +1,3 @@
-const kPSEUDO_OPCODES = ['END', 'EQU', 'ORG']
-
 class Preprocessor {
 
     constructor() {
@@ -118,9 +116,24 @@ class Preprocessor {
     }
 
     join_instructions(instructions) {
+        const fixed = []
+        var last = 0
+
         for (var i = 0; i < instructions.length; i++) {
-            instructions[i] = instructions[i].instruction.join('\t')
+            var line = instructions[i].instruction.join('\t')
+            
+            while (instructions[i].original_line > last + 1) {
+                fixed.push('')
+                last++
+            }
+
+            fixed.push(line)
+            instructions[i] = line
+
+            last++
         }
+
+        return fixed
     }
 
     make_valid_label(text) {
@@ -359,15 +372,17 @@ class Preprocessor {
         this.evaluate_addresses(components)
 
         // put the components back together
-        this.join_instructions(components)
+        const fixed = this.join_instructions(components)
+        const verbose = fixed.join('\n')
 
         // join the lines
-        var output = components.join('\n')
+        const output = components.join('\n')
 
         // todo add warnings for missing "obligatory" metadata (name, author, 
         // redode version)
 
         return {
+            verbose_code: verbose,
             code: output,
             errors: this.errors,
             warnings: this.warnings,

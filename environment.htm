@@ -12,7 +12,8 @@
     </style>
 
     <script src='rc-classes.js'></script>
-
+    <script src='rc-instruction-set.js'></script>
+    
     <script src='ui-common.js'></script>
 
     <script>
@@ -64,54 +65,54 @@
                     <label for='max_cycles'>Max. number of cycles</label>
                 </td>
                 <td>
-                    <input type='number' id='max_cycles' value='80000' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='max_cycles' value='8000' onchange='update_environment()'>
                 </td>
-                <td>80000</td>
+                <td class='td-right'>8000</td>
             </tr>
             <tr>
                 <td>
                     <label for='num_rounds'>Number of rounds</label>
                 </td>
                 <td>
-                    <input type='number' id='num_rounds' value='100' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='num_rounds' value='100' onchange='update_environment()'>
                 </td>
-                <td>100</td>
+                <td class='td-right'>100</td>
             </tr>
             <tr>
                 <td>
                     <label for='core_size'>Core size</label>
                 </td>
                 <td>
-                    <input type='number' id='core_size' value='4000' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='core_size' value='4000' onchange='update_environment()'>
                 </td>
-                <td>8000</td>
+                <td class='td-right'>8000</td>
             </tr>
             <tr>
                 <td>
                     <label for='max_instructions'>Max. code length</label>
                 </td>
                 <td>
-                    <input type='number' id='max_instructions' value='100' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='max_instructions' value='100' onchange='update_environment()'>
                 </td>
-                <td>100</td>
+                <td class='td-right'>100</td>
             </tr>
             <tr>
                 <td>
                     <label for='p_space_size'>P-space size</label>
                 </td>
                 <td>
-                    <input type='number' id='p_space_size' value='500' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='p_space_size' value='500' onchange='update_environment()'>
                 </td>
-                <td>500</td>
+                <td class='td-right'>500</td>
             </tr>
             <tr>
                 <td>
                     <label for='max_threads'>Max. number of threads</label>
                 </td>
                 <td>
-                    <input type='number' id='max_threads' value='8000' onchange='update_environment()'>
+                    <input class='td-right' type='number' id='max_threads' value='8000' onchange='update_environment()'>
                 </td>
-                <td>8000</td>
+                <td class='td-right'>8000</td>
             </tr>
         </table>
 

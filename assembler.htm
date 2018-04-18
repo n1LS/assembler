@@ -70,11 +70,11 @@
 
     <script src='rc-core.js'></script>
     <script src='rc-math.js'></script>
+    <script src='rc-instruction-set.js'></script>
     <script src='rc-address-modes.js'></script>
     <script src='rc-preprocessor.js'></script>
     <script src='rc-assembler.js'></script>
     <script src='rc-classes.js'></script>
-    <script src='rc-instruction-set.js'></script>
     <script src='rc-instruction.js'></script>
 
     <script src='ui-common.js'></script>
@@ -89,7 +89,7 @@
             var prepro = new Preprocessor()
             var output = prepro.preprocess(code, environment)
 
-            var content = number_text(output.code, true)
+            var content = number_text(output.verbose_code, true)
             document.getElementById('preprocessor_output').innerHTML = content
 
             html = '<span class="gray">'

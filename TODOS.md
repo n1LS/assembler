@@ -2,6 +2,7 @@
 
 - debug tools (watches, breakpoints)
 - 'someone died' / 'winner' popup
+- assembler: toggle between verbose and code output (sync scrolling as well)
 
 # Preprocessor
 

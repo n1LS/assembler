@@ -5,7 +5,7 @@ class Environment {
         this.core_size          = 4000
         this.max_threads        = 128
         this.num_rounds         = 100
-        this.max_cycles         = 80000
+        this.max_cycles         = 8000
         this.p_space_size       = 500
     }
 

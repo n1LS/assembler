@@ -30,19 +30,20 @@ function number_text(text, syntax_coloring) {
     const pad_len = ('' + lines.length).length
     var s = ''
 
+    var op_regex = new RegExp(`\\b(${__op_regex})\\b`, 'gi')
+    var pop_regex = new RegExp(`\\b(${__pop_regex})\\b`, 'gi')
+
     for (var i = 0; i < lines.length; i++) {
         n = (1 + i + '').padStart(pad_len)
 
         var line = lines[i]
 
         if (syntax_coloring) {
-            line = line.replace(/\bequ\b/gi, '<span class="keyword">$&</span>')
-            line = line.replace(/\bend\b/gi, '<span class="keyword">$&</span>')
             line = line.replace(/-?\b\d+/g, '<span class="number">$&</span>')
 
-            var re = new RegExp(`\\b(${__op_regex})\\b`, 'gi')
-            line = line.replace(re, '<span class="opcode">$&</span>')
-
+            line = line.replace(op_regex, '<span class="opcode">$&</span>')
+            line = line.replace(pop_regex, '<span class="keyword">$&</span>')
+            
             line = line.replace(/\B(@|#|\$|\*|&gt;|&lt;|{|})/g, '<span class="address_mode">$&</span>')
         }
 

@@ -176,6 +176,10 @@ li:hover {
   color: red;
 }
 
+.td-right {
+  text-align: right;
+}
+
 h1 {
   color: #e2004b;
   height: 16px;
@@ -190,16 +194,21 @@ u {
   line-height: 8px;
 }
 
-th,
 b {
   color: #e2004b;
   font-weight: 100;
 }
 
+th {
+  height: 16px;
+}
+
+th,
 .heading {
   color: #fecb00;
   background-color: #181818;
   overflow: hidden;
+  font-weight: normal;
 }
 
 i {

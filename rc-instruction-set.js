@@ -215,7 +215,12 @@ var opcodes = [
 
 const __op_from_code = new Map(opcodes.map(op => [op.opcode, op]))
 const __op_from_name = new Map(opcodes.map(op => [op.name, op]))
+
+// helpers
+
+const kPSEUDO_OPCODES = ['END', 'EQU', 'ORG']
 const __op_regex = [""].concat(opcodes).reduce((a,op)=>a+'|'+op.name).substr(1)
+const __pop_regex = kPSEUDO_OPCODES.join('|')
 
 // the following is not part of the instruction set itself, it's only used for
 // testing the opcode array for obvious inconsistencies
