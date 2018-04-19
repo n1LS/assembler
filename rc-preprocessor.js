@@ -263,7 +263,7 @@ class Preprocessor {
     }
 
     evaluate_address(address) {
-        const valid_chars = all_address_mode_names + '()0123456789+-/*'
+        const valid_chars = address_mode_names + '()0123456789+-/*'
         
         // check if the only contents is now numberical + operand
         for (var i = 0; i < address.length; i++) {
@@ -277,7 +277,7 @@ class Preprocessor {
         var prefix = address[0]
         var value = address
 
-        if (all_address_mode_names.includes(prefix)) {
+        if (address_mode_names.includes(prefix)) {
             value = address.substr(1, address.length)
         } else {
             prefix = addr_names.get(default_address_mode).display
