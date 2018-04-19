@@ -5,10 +5,6 @@
     <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
 
     <style>
-        .gray {
-            color: gray;
-        }
-
         #container-top {
             height: 75vh;
             max-height: 75vh;
@@ -23,7 +19,7 @@
             height: calc(75vh - 16px);
             max-height: calc(75 - 16px);
         }
-
+        
         #editor-nol {
             float: left;
             width: 40px;
@@ -39,20 +35,17 @@
             position: absolute;
         }
 
-        #preprocessor_output {
-            overflow: scroll;
-            width: 100%;
-        }
-
         #editor {
             overflow: scroll;
             white-space: nowrap;
             width: calc(100% - 48px);
         }
-
+        
+        #preprocessor_output,
         #assembler_output {
             overflow: scroll;
             width: 100%;
+            padding-left: 1px;
         }
 
         #log {
@@ -65,7 +58,6 @@
         .local-width {
             width: calc(20% - 16px);
         }
-
     </style>
 
     <script src='rc-core.js'></script>
@@ -82,17 +74,19 @@
     <script>
 
         var modified = false
+        var verbose = true
         var environment = new Environment()
 
         function preprocess() {
             var code = document.getElementById('editor').value
             var prepro = new Preprocessor()
             var output = prepro.preprocess(code, environment)
+            var out = verbose ? output.verbose_code : output.code
 
-            var content = number_text(output.verbose_code, true)
+            var content = number_text(out, true, false)
             document.getElementById('preprocessor_output').innerHTML = content
 
-            html = '<span class="gray">'
+            html = '<span>'
 
             if (output.errors.length) {
                 html += `<b>PREPROCESSOR ERRORS:</b>\n${output.errors.join('\n').html()}</b>\n\n`
@@ -112,11 +106,11 @@
         function assemble(code) {
             var assembler = new Assembler()
             var output = assembler.assemble(code, environment)
-            var content = number_text(output.listing, false)
+            var content = number_assembly(output.listing, true)
 
             document.getElementById('assembler_output').innerHTML = content
 
-            var html = '<br><span class="gray">'
+            var html = '<br><span>'
 
             if (output.errors.length) {
                 html += `\n<b>ASSEMBLER ERRORS:</b>\n${output.errors.join('\n').html()}</b>\n\n`
@@ -186,6 +180,20 @@
             var e = document.getElementById('editor-nol')
             e.style.height = y.scrollHeight
             e.style.marginTop = `-${y.scrollTop}px`
+
+            if (verbose) {
+                var p = document.getElementById('preprocessor_output')
+                p.scrollTop = y.scrollTop
+            }
+        }
+
+        function output_scrolled() {
+            if (verbose) {
+                var p = document.getElementById('preprocessor_output')
+                var y = document.getElementById('editor')
+
+                y.scrollTop = p.scrollTop
+            }
         }
 
         function init() {
@@ -218,6 +226,15 @@
             }
         }
 
+        function toggle_verbose() {
+            verbose = !verbose
+
+            document.getElementById('checkbox-verbose').innerHTML = `[${verbose ? 'X' : ' '}] verbose`
+
+            changed()
+            scrolled()
+        }
+
     </script>
 
 </head>
@@ -229,29 +246,32 @@
         <div id='container-top' class='code'>
             <div class='left50'>
                 <h1>Source code</h1>
-                <div id='editor-nol' class='code num'></div>
-                <div id='blank-out' class='code'></div>
-                <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='code' onkeyup='changed()'
-                    onscroll='scrolled()'>
+                <div class='no-overflow'>
+                    <div id='editor-nol' class='code num'></div>
+                    <div id='blank-out' class='code'></div>
+                    <textarea id='editor' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='code' onkeyup='changed()'
+                        onscroll='scrolled()'>
 ;redcode-88
 ;author your_name_here
         org start
 start   mov $1,     $1
 dummy   dat #0,     #0</textarea>
+                </div>
             </div>
-
             <div class='v-spacer'></div>
-            
+
             <div class='left30'>
-                <h1>Preprocessor output / Load file</h1>
-                <pre id='preprocessor_output' class='code'>preprocessor output</pre>
+                <h1>Preprocessor output
+                    <span id='checkbox-verbose' onclick='toggle_verbose()'>[X] verbose</span>
+                </h1>
+                <pre id='preprocessor_output' onscroll='output_scrolled()' class='code'></pre>
             </div>
 
             <div class='v-spacer'></div>
 
             <div class='left local-width'>
                 <h1>Assembly listing</h1>
-                <pre id='assembler_output' class='code'>assembler output</pre>
+                <pre id='assembler_output' class='code'></pre>
             </div>
 
         </div>
