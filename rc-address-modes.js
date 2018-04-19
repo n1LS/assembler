@@ -12,7 +12,7 @@ const addr_names = new Map([
 // precalculated accessors
 const default_address_mode   = addr_direct
 const all_address_mode_names = Array.from(addr_names.values()).map(e => e.display).join('')
-const default_data     = addr_names.get(default_address_mode).display + '0'
+const default_data           = addr_names.get(default_address_mode).display + '0'
 
 function address_mode_name(mode) {
     return addr_names.get(mode).display
