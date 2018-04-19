@@ -45,6 +45,7 @@ class RAM {
         
         this.memory[address].op = instruction.op
 
+        this.memory[address].read_flag = -1
         this.memory[address].write_flag = this.current_process_index
     }
     
@@ -116,6 +117,8 @@ class Core {
         
         this.processes[pid] = new Process(program, this.environment.max_threads)
         this.processes[pid].push(address + program.load_address)
+
+        this.set_current_process_index(0)
     }
     
     current_process() {

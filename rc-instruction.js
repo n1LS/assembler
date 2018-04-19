@@ -13,19 +13,21 @@ class Instruction {
         if (!this.op.operands_valid(this.a, this.b)) {
             console.log('Invalid operands. Cannot create instruction!')
             throw 'InstructionInvalidError'
-        }        
+        }
     }
 
     copy() {
-        var a = new Value(this.a.value, this.a.mode)
-        var b = new Value(this.b.value, this.b.mode)
+        var a = this.a.copy()
+        var b = this.b.copy()
         var i = new Instruction(this.op.opcode, a, b)
 
         return i
     }
 
     is_equal(other) {
-        return (this.op == other.op) && (this.a.is_equal(other.a)) && (this.b.is_equal(other.b))
+        return (this.op == other.op) && 
+               (this.a.is_equal(other.a)) && 
+               (this.b.is_equal(other.b))
     }
 
     execute(address, ram) {
@@ -46,7 +48,11 @@ class Instruction {
             return s
         }
 
-        var out = `${this.op.name} ${address_mode_name(this.a.mode)}${padl(address_width, this.a.value)} ${address_mode_name(this.b.mode)}${padl(address_width, this.b.value)}`
+        function val_string(v) {
+            return address_mode_name(v.mode) + padl(address_width, v.value)
+        }
+
+        var out = `${this.op.name} ${val_string(this.a)} ${val_string(this.b)}`
 
         return out
     }
@@ -54,8 +60,8 @@ class Instruction {
     to_short_string() {
         var out = this.op.short_name
         
-        out += addr_names.get(this.a.mode).short + i2s_s(this.a.value, 4)
-        out += addr_names.get(this.b.mode).short + i2s_s(this.b.value, 4)
+        out += addr_names.get(this.a.mode).display + i2s_s(this.a.value, 4)
+        out += addr_names.get(this.b.mode).display + i2s_s(this.b.value, 4)
 
         return out
     }
