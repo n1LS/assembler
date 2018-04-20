@@ -143,6 +143,15 @@ li:hover {
   height: 100%;
 }
 
+.max-h-30 {
+  overflow: scroll;
+  max-height: 30%;
+}
+
+.scroll {
+  overflow: scroll;
+}
+
 .no-overflow {
   overflow: hidden;
 }

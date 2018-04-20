@@ -141,8 +141,13 @@
 
             for (var i = 0; i < selected.length; i++) {
                 const c = code[selected[i]]
-                const b64 = btoa(c)
-                s.push(b64)
+                try {
+                    const b64 = btoa(c)
+                    s.push(b64)
+                }
+                catch (e) {
+                    console.log(`Could not convert code:\n${c}`)
+                }
             }
 
             return s.join('::')
@@ -201,20 +206,20 @@
 
     <div class='top light'>
 
-        <div class='left30 padded light'>
+        <div class='left30 padded light no-overflow'>
 
             <div class='heading'>PUBLIC WARRIORS:</div>
-            <span id='public'></span>
+            <div id='public' class='max-h-30'></div>
             <br>
 
             <div class='heading'>LOCAL WARRIORS:</div>
-            <span id='local'></span>
+            <div id='local' class='max-h-30'></div>
             <br>
             
             <div class='heading'>SELECTED:
                 <span class='right clickable' onclick='remove_all()'>[REMOVE ALL]</span>
             </div>
-            <span id='selection-list'></span>
+            <div id='selection-list' class='max-h-30'></div>
 
         </div>
 

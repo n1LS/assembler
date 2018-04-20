@@ -283,6 +283,9 @@ class Preprocessor {
             prefix = addr_names.get(default_address_mode).display
         }
 
+        // trim leading zeros
+        // value = value.replace(/^0+/, '')
+
         var v = 0
 
         try {
