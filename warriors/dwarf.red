@@ -1,7 +1,11 @@
-;redcode-88
-;name dwarf
-    org     jump
-    add     #4, 3
-    mov     2,  @2
-JUMP jmp    -2
-dummy dat   #42 #0
+;redcode verbose
+;name Dwarf
+;author A. K. Dewdney
+;strategy Throw DAT bombs around memory, hitting every 4th memory cell.
+;strategy   This program was presented in the first Corewar article.
+;assert (CORESIZE % 4)==0
+bomb	dat	#0
+dwarf	add	#4,bomb
+	mov	bomb,@bomb
+	jmp	dwarf
+	end	dwarf

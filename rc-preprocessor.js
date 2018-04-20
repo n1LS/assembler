@@ -334,7 +334,7 @@ class Preprocessor {
                 const key = items[0].substr(1)
                 const value = items.splice(1).join(' ')
 
-                metadata.set(key, value)
+                metadata.set(key.toUpperCase(), value)
             }
         }
 

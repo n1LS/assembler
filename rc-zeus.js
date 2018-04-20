@@ -28,11 +28,15 @@ class Zeus {
 
         p.zeus_identifier = this.programs.length
         p.zeus_score = 0
+    
+        if (!p.metadata.has('ZEUS_ID')) {
+            this.report(`Warrior ${p.metadata.get('NAME')} is missing metadata entry 'ZEUS_ID'`)
+        }
 
         this.programs.push(p)
         
         const id = this.programs.length
-        const name = p.metadata.get('name')
+        const name = p.metadata.get('NAME')
         this.report(`Successfully assembled warrior #${id} "${name}"`)
     }
 
@@ -43,15 +47,28 @@ class Zeus {
             const p = this.programs[i]
             
             if (p.instructions.length > this.environment.max_instructions) {
-                report(`Warrior #${1+i} "${p.metadata.get('name')}" is disqualified for excessive code length (${p.instructions.length}).`)
+                report(`Warrior #${1+i} "${p.metadata.get('NAME')}" is disqualified for excessive code length (${p.instructions.length}).`)
                 this.programs.splice(i, 1)
             }
         }
+
+        // report initial empty score set 
+        this.report_score()
     }
 
     report(message) {
         if (this.on_log) {
             this.on_log(message)
+        }
+    }
+
+    report_score() {
+        if (this.on_score) {
+
+            for (var i = 0; i < this.programs.length; i++) {
+                const p = this.programs[i]
+                this.on_score(p.metadata.get('ZEUS_ID'), p.zeus_score, p.metadata.get('NAME'))
+            }
         }
     }
 
@@ -85,7 +102,7 @@ class Zeus {
         for (var p = 0; p < this.programs.length; p++) {
             const program = this.programs[p]
             const score = program.zeus_score
-            var name = program.metadata.get('name')
+            var name = program.metadata.get('NAME')
 
             if (name === undefined) {
                 name = `Unnamed-${p}`
@@ -108,8 +125,11 @@ class Zeus {
             const score = ('' + result.score).padStart(score_l)
             const num = ('' + (r + 1)).padStart(num_l)
             this.report(`${num}. ${name} ${score}`)
+
         }
 
+        this.report_score()
+        
         return cycles
     }
 
@@ -127,7 +147,7 @@ class Zeus {
         }
 
         const survivors = this.core.processes.map(p => p = {
-            name: `"${p.program.metadata.get('name')}"`,
+            name: `"${p.program.metadata.get('NAME')}"`,
             identifier: p.zeus_identifier,
         })
 

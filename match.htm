@@ -25,29 +25,40 @@
 
     <script>
 
-        var programs = []
         var zeus
+        var warriors
+        var tournament_state = {}
 
         function init() {
             zeus = new Zeus(new Environment())
 
-            const self = this
-            zeus.on_log = function (msg) {
-                self.log(msg)
-            }
-
             // listen to messages from parent window
             window.addEventListener('message', message_handler, false)
+        }
+
+        function set_warriors(b64s) {
+            warriors = []
+
+            for (var i = 0; i < b64s.length; i++) {
+                var code = atob(b64s[i])
+                code += `\n;zeus_id ${i}`
+
+                warriors.push({
+                    code: code,
+                    id: i,
+                    score: 0
+                })
+            }
         }
 
         function message_handler(event) {
             items = event.data.split('::')
             action = items.shift(0)
             
-
             switch (action) {
                 case 'load':
-                    load_warriors(items)
+                    set_warriors(items)    
+                    load_warriors(warriors)
                     break
                 case 'environment':
                     zeus.environment = JSON.parse(atob(items[0]))
@@ -56,16 +67,11 @@
         }
 
         function load_warriors(warriors) {
-            const names = []
-
             zeus.reset()
 
-            programs = []
-
-            warriors.forEach(base64 => {
-                code = atob(base64)
-
-                zeus.load_code(code)
+            warriors.forEach(obj => {
+                zeus.load_code(obj.code)
+                obj.score = 0
             })
 
             zeus.validate_programs()
@@ -83,17 +89,120 @@
             l.style.display = d
         }
 
-        function run() {
+        function clear_log() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function run_match() {
+            clear_log()
+
+            zeus.on_log = function (msg) {
+                log(msg)
+            }
+
+            zeus.on_score = function (id, score, name) {
+                warriors[id].score = score
+                warriors[id].name = name
+            }
+
+            load_warriors(warriors)
+            
             const start = performance.now()
             const cycles = zeus.run()
-            const duration = ~~(performance.now() - start)
+            const duration = ~~(performance.now() - tournament_state.start)
             const mips = ~~((cycles / 10) / duration) / 100
 
             log(`\nRan ${cycles} cycles in ${duration} ms, ${mips} MIPS.`)
+        }    
+
+        function run_tournament_match(w1, w2) {
+            if (w1 != w2) {
+                // run match
+
+                zeus.reset()
+                zeus.load_code(warriors[w1].code)
+                zeus.load_code(warriors[w2].code)
+                zeus.validate_programs()
+
+                tournament_state.cycles += zeus.run()
+
+                clear_log()
+
+                const results = []
+
+                for (var p = 0; p < warriors.length; p++) {
+                    results.push({
+                        name: warriors[p].name,
+                        score: warriors[p].score
+                    })
+                }
+
+                var max = 0
+
+                results.sort(function (a, b) { 
+                    max = Math.max(a.score, Math.max(b.score, max))
+                    return b.score - a.score 
+                })
+
+                var max_l = (max + '').length
+                var max_pos_l = (results.length + '').length
+
+                for (var r = 0; r < results.length; r++) {
+                    const result = results[r]
+                    const name = result.name !== undefined ? result.name : '-'
+                    const position = (1 + r + '').padStart(max_pos_l)
+                    log(`${1 + position}. ${(result.score + '').padStart(max_l)} | ${name}`)
+                }
+
+                const num_w = warriors.length
+                const total = num_w ** 2 - num_w
+                const ran = w1 * num_w + w2 - w1 + 1
+
+                const duration = ~~(performance.now() - tournament_state.start)
+                const mips = ~~((tournament_state.cycles / 10) / duration) / 100
+
+                results.sort(function (a, b) { return b.score - a.score })
+
+                log(`\nMatch ${ran}/${total}\n${tournament_state.cycles} cycles in ${duration} ms\n${mips} MIPS.`)
+            }
+
+            // keep going
+
+            var next_w1 = w1
+            var next_w2 = w2 + 1
+            
+            if (next_w2 == warriors.length) {
+                next_w2 = 0
+                next_w1++
+
+                if (next_w1 == warriors.length) {
+                    // done
+                    return
+                }
+            } 
+
+            setTimeout( function () {
+                run_tournament_match(next_w1, next_w2)
+            }, 0)
+
         }
 
-        function clear_log() {
-            document.getElementById('log').innerHTML = '';
+        function run_tournament() {
+            clear_log()
+
+            zeus.on_log = undefined
+
+            zeus.on_score = function (id, score, name) {
+                warriors[id].score += score
+                warriors[id].name = name
+            }
+
+            // run each pair against each other
+            
+            tournament_state.start = performance.now()
+            tournament_state.cycles = 0
+
+            run_tournament_match(0, 0)
         }
 
     </script>
@@ -110,11 +219,10 @@
     </div>
 
     <div class='toolbar'>
-        <input type='button' value='RUN' onclick='run()'>
-        <input type='button' value='DEFAULT PARAMETERS' onclick=''>
+            <input type='button' value='RUN MATCH' onclick='run_match()'>
+            <input type='button' value='RUN TOURNAMENT' onclick='run_tournament()'>
         <input type='button' value='CLEAR LOG' onclick='clear_log()' class='right'>
     </div>
-
 
 </body>
 

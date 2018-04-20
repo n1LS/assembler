@@ -333,7 +333,7 @@
 
             for (var pid = 0; pid < core.processes.length; pid++) {
                 const next = core.processes[pid].next()
-                const name = core.processes[pid].program.metadata.get('name')
+                const name = core.processes[pid].program.metadata.get('NAME')
                 draw_text(0, dy, `#${pid} ${name}`, process_colors[1][pid + 1])
 
                 dy += row_height
