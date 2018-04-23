@@ -218,7 +218,7 @@ const __op_from_name = new Map(opcodes.map(op => [op.name, op]))
 
 // helpers
 
-const kPSEUDO_OPCODES = ['END', 'EQU', 'ORG']
+const kPSEUDO_OPCODES = ['END', 'EQU', 'ORG', 'FOR', 'ROF']
 const __op_regex = [""].concat(opcodes).reduce((a,op)=>a+'|'+op.name).substr(1)
 const __pop_regex = kPSEUDO_OPCODES.join('|')
 

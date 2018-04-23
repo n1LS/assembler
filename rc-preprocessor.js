@@ -22,9 +22,11 @@ class Preprocessor {
             // skip everything after 'END'
             if (line.trim() == 'END') {
                 var l = lines.length - i - 1
+                
                 if (l) {
-                    this.warnings.push(`W002: ${l} lines after END token`);
+                    this.warnings.push(`W002: ${l} line(s) after END token`);
                 }
+                
                 lines.splice(i + 1, l - 1)
                 line = ''
             }
@@ -238,6 +240,90 @@ class Preprocessor {
         }
     }
 
+    solve_loop(lines) {
+        var for_op = lines.splice(0, 1)[0]
+        lines.pop()
+
+        const variable = for_op.instruction[0]
+        const value = eval(for_op.instruction[2])
+        const regex = new RegExp(variable, 'gi');
+
+        const output = []
+
+        for (var i = 0; i < value; i++) {
+            for (var r = 0; r < lines.length; r++) {
+                var source = lines[r]
+
+                var line = {
+                    line: source.line,
+                    original_line: source.original_line,
+                    instruction: source.instruction.slice()
+                }
+                
+                var ins = line.instruction.slice()
+                var val = (i + 1) + ''
+                
+                // replace in label
+                ins[0] = ins[0].replace(regex, val)
+                // replace in values
+                ins[2] = ins[2].replace(regex, val)
+                ins[3] = ins[3].replace(regex, val)
+                
+                line.instruction = ins
+
+                output.push(line);
+                console.log(r + 'x' + val + ': ' + ins)
+            }
+        }
+
+        return output
+    }
+
+    evalulate_loop(lines, index) {
+        var loop_end = index + 1
+        var found = false
+
+        // find matching ROF
+        while (loop_end < lines.length) {
+            const op = lines[loop_end].instruction[1]
+
+            if (op == 'FOR') { 
+                loop_end = this.evalulate_loop(lines, loop_end)
+            }
+            else if (op == 'ROF') {
+                found = true
+                break
+            }
+
+            loop_end++
+        }
+
+        if (found) {
+            // we have a matching for-rof block with no further for/rof blocks
+            // inside
+            const loop = lines.splice(index, loop_end - index + 1)
+            const resolved = this.solve_loop(loop)
+           
+            lines.splice.apply(lines, [index, 0].concat(resolved))
+            
+            // return next index to check
+            return index + resolved.length
+        }
+
+        this.errors.push(`E001: Missing ROF for FOR in line ${lines[index].original_line}`)
+    }
+
+    parse_loops(lines) {
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i]
+
+            if (line.instruction[1] == 'FOR') {
+                this.evalulate_loop(lines, i)
+                i--
+            }
+        }
+    }
+
     number_lines(lines) {
         var counter = 0
 
@@ -283,13 +369,11 @@ class Preprocessor {
             prefix = addr_names.get(default_address_mode).display
         }
 
-        // trim leading zeros
-        // value = value.replace(/^0+/, '')
-
-        var v = 0
+        // trim leading zeros (cause we allow them for some reason)
+        value = value.replace(/^0+(?=\d)/, '')
 
         try {
-            v = eval(value)
+            var v = eval(value)
         }
         catch (error) {
             this.errors.push(`E008: Unresolvable address '${value}'`)
@@ -358,12 +442,14 @@ class Preprocessor {
         // extract all comment-value meta data liens
         const metadata = this.extract_metadata(code.split('\n'))
 
-        // strip all non-code lines and turn the strings into [index, text] 
-        // objects
+        // strip all non-code lines and turn the strings into objects
         this.strip_lines(components)
 
         // split into quads
         this.split_instructions(components)
+
+        // unroll for/rof
+        this.parse_loops(components)
 
         // set correct addresses
         this.number_lines(components)
