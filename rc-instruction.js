@@ -17,11 +17,7 @@ class Instruction {
     }
 
     copy() {
-        var a = this.a.copy()
-        var b = this.b.copy()
-        var i = new Instruction(this.op.opcode, a, b)
-
-        return i
+        return new Instruction(this.op.opcode, this.a.copy(), this.b.copy())
     }
 
     is_equal(other) {

@@ -12,6 +12,7 @@ class ALU {
 }
 
 class RAM {
+    
     constructor(environment) {
         this.current_process_index = -1
         this.environment = environment
@@ -29,7 +30,7 @@ class RAM {
     
     r(address) {
         address = ALU.sanitize(address)
-       
+
         this.memory[address].read_flag = this.current_process_index
         return this.memory[address]
     }
@@ -38,13 +39,8 @@ class RAM {
         address = ALU.sanitize(address)
         
         // copy values individually to prevent override
-        this.memory[address].a.mode = instruction.a.mode
-        this.memory[address].a.value = instruction.a.value
-        this.memory[address].b.mode = instruction.b.mode
-        this.memory[address].b.value = instruction.b.value
+        this.memory[address] = instruction.copy()
         
-        this.memory[address].op = instruction.op
-
         this.memory[address].read_flag = -1
         this.memory[address].write_flag = this.current_process_index
     }

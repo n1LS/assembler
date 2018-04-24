@@ -109,7 +109,7 @@
             
             const start = performance.now()
             const cycles = zeus.run()
-            const duration = ~~(performance.now() - tournament_state.start)
+            const duration = ~~(performance.now() - start)
             const mips = ~~((cycles / 10) / duration) / 100
 
             log(`\nRan ${cycles} cycles in ${duration} ms, ${mips} MIPS.`)

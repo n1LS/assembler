@@ -35,17 +35,20 @@ var code_2 =
 `
 var code_for = 
 `;name for
-i       for 5
-        dat i       10-i
-3       rof
-;4       mov 0       0
-;5       for 2
-;6       for 3
-;7       mov x       y
-;8       rof
-;9       rof
-;10      jmp 0
-;11      end
+;name dbldwarf
+;assert 1
+
+        DAT             #-0001
+        SUB #00005,   -0001
+        MOV #00000,  @-0002
+        JMP  -0002        
+        DAT          #0000
+start   SPL  -0004,   #-1     
+        ADD #00005,   -0002
+        MOV #00000,  @-0003
+        JMP  -0002        
+        END  start     
+
 `
 /* zeus test
 const zeus = new Zeus(new Environment())
@@ -61,8 +64,8 @@ const mips = ~~((cycles / 10) / duration) / 100
 console.log(`Ran ${cycles} cycles in ${duration} ms, ${mips} MIPS.`)
 */
 
-const preprocessor = new Preprocessor(new Environment())
-const out = preprocessor.preprocess(code_for)
+const preprocessor = new Preprocessor()
+const out = preprocessor.preprocess(code_for, new Environment())
 
 console.log('ERRORS:')
 console.log(out.errors.join('\n'))

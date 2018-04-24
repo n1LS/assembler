@@ -367,8 +367,12 @@
             var c = process_colors[1][core.current_process_index + 1]
             const ni = core.next_instruction();
 
+            var index = core.current_process().next() + ''
+            const l = (core.environment.core_size + '').length
+            index = index.padStart(l, '0')
+
             if (ni !== null) {
-                draw_text(0, dy, `NEXT ${ni.to_string(max_width - 1)}`, c)
+                draw_text(0, dy, `${index} ${ni.to_string(max_width - 1)}`, c)
             }
 
             dy += row_height

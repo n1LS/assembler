@@ -98,6 +98,11 @@ class Preprocessor {
                     if (items.length < 2 + op.num_params) {
                         this.errors.push(`E006: Too few tokens for opcode '${items[1]}' on line ${o_l} '${ins}'`)
                     }
+
+                    // single operand? right align?
+                    if (items.length == 3 && op.b_align) {
+                        items.splice(2, 0, '0')
+                    }
                 }
                 else {
                     // pseudo-op?
@@ -143,24 +148,26 @@ class Preprocessor {
         return text.replace(/[^\x41-\x5A_\x30-\x39]/g, '')
     }
 
-    resolve_equs(equs, labels) {
+    resolve_equates() {
         const self = this
         
-        equs.forEach((value, key) => {
-            equs.set(key, self.resolve_label(0, value, labels, equs))
+        this.equates.forEach((value, key) => {
+            self.equates.set(key, self.resolve_label(0, value))
         })
     }
 
-    resolve_label(offset, text, labels, equs) {
+    resolve_label(offset, text) {
         var all = new Map()
 
-        labels.forEach((value, key) => {
+        this.labels.forEach((value, key) => {
             all.set(key, value - offset)
         })
 
-        equs.forEach((value, key) => {
+        this.equates.forEach((value, key) => {
             all.set(key, value)
         })
+
+        all.set('CURLINE', offset)
 
         var idents = Array.from(all.keys()).sort((a, b) => { 
             return b.length - a.length 
@@ -177,8 +184,6 @@ class Preprocessor {
 
     replace_labels(instructions) {
         // everything in column 1 is a label
-        var labels = new Map()
-        var equs = new Map()
 
         for (var i = 0; i < instructions.length; i++) {
             var ins = instructions[i]
@@ -190,15 +195,15 @@ class Preprocessor {
                 if (ins.instruction[1] == 'EQU') {
                     instructions[i] = null
                     
-                    if (!equs.has(label)) {
-                        equs.set(label, components[2])
+                    if (!this.equates.has(label)) {
+                        this.equates.set(label, components[2])
                     } else {
                         this.warnings.push(`W004: Duplicate constant '${label}' in line ${ins.original_line}`)
                     }
                 }
                 else {
-                    if (!labels.has(label)) {
-                        labels.set(label, ins.line)
+                    if (!this.labels.has(label)) {
+                        this.labels.set(label, ins.line)
                     } else {
                         this.warnings.push(`W003: Duplicate label '${label}' in line ${ins.original_line}`)
                     }
@@ -214,7 +219,7 @@ class Preprocessor {
             }
         }
 
-        this.resolve_equs(equs, labels)
+        this.resolve_equates()
         
         // now find components using these labels      
         for (var i = 0; i < instructions.length; i++) {
@@ -222,14 +227,14 @@ class Preprocessor {
             var comp = ins.instruction
 
             if (comp.length > 2) {
-                comp[2] = this.resolve_label(ins.line, comp[2], labels, equs)
+                comp[2] = this.resolve_label(ins.line, comp[2])
             }
             else {
                 comp.push(default_data)
             }
 
             if (comp.length > 3) {
-                comp[3] = this.resolve_label(ins.line, comp[3], labels, equs)
+                comp[3] = this.resolve_label(ins.line, comp[3])
             }
             else {
                 comp.push(default_data)
@@ -240,12 +245,21 @@ class Preprocessor {
         }
     }
 
-    solve_loop(lines) {
+    solve_loop(lines, offset) {
         var for_op = lines.splice(0, 1)[0]
         lines.pop()
 
         const variable = for_op.instruction[0]
-        const value = eval(for_op.instruction[2])
+        var value = for_op.instruction[2]
+
+        try {
+            value = eval(this.resolve_label(offset, value))
+        }
+        catch (e) {
+            this.errors.push(`E009: Unresolvable address '${value}' in loop`)
+            return []
+        }
+
         const regex = new RegExp(variable, 'gi');
 
         const output = []
@@ -266,13 +280,13 @@ class Preprocessor {
                 // replace in label
                 ins[0] = ins[0].replace(regex, val)
                 // replace in values
-                ins[2] = ins[2].replace(regex, val)
-                ins[3] = ins[3].replace(regex, val)
+                for (var x = 2; x < ins.length; x++) {
+                    ins[x] = ins[x].replace(regex, val)
+                }
                 
                 line.instruction = ins
 
                 output.push(line);
-                console.log(r + 'x' + val + ': ' + ins)
             }
         }
 
@@ -302,8 +316,8 @@ class Preprocessor {
             // we have a matching for-rof block with no further for/rof blocks
             // inside
             const loop = lines.splice(index, loop_end - index + 1)
-            const resolved = this.solve_loop(loop)
-           
+            const resolved = this.solve_loop(loop, index)
+
             lines.splice.apply(lines, [index, 0].concat(resolved))
             
             // return next index to check
@@ -311,6 +325,7 @@ class Preprocessor {
         }
 
         this.errors.push(`E001: Missing ROF for FOR in line ${lines[index].original_line}`)
+        lines.splice(index, 1)
     }
 
     parse_loops(lines) {
@@ -349,7 +364,7 @@ class Preprocessor {
     }
 
     evaluate_address(address) {
-        const valid_chars = address_mode_names + '()0123456789+-/*'
+        const valid_chars = address_mode_names + '()0123456789+-/*%'
         
         // check if the only contents is now numberical + operand
         for (var i = 0; i < address.length; i++) {
@@ -370,7 +385,7 @@ class Preprocessor {
         }
 
         // trim leading zeros (cause we allow them for some reason)
-        value = value.replace(/^0+(?=\d)/, '')
+        value = value.replace(/^[-]?0+(?=\d)/, '')
 
         try {
             var v = eval(value)
@@ -428,10 +443,25 @@ class Preprocessor {
         return metadata
     }
 
-    preprocess(code) {
-        var instructions = new Array()
+    fill_environment_equates() {
+        this.equates.set('CORESIZE', this.environment.core_size + '')
+        this.equates.set('MAXLENGTH', this.environment.max_instructions + '')
+        // TODO: missing constants
+    }
+
+    preprocess(code, environment) {
+        this.environment = environment
+
         this.warnings = new Array()
         this.errors = new Array()
+        
+        this.labels = new Map()
+        this.equates = new Map()
+        
+        var instructions = new Array()
+
+        // get all environment constants
+        this.fill_environment_equates()
 
         // strip all non-ascii characters
         code = this.strip_to_ascii(code)
