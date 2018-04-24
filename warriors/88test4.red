@@ -30,7 +30,7 @@ a       for 10
         rof
         jmp boot+7
 
-        dd for MAXLENGTH-CURLINE
+dd      for MAXLENGTH-CURLINE
         dat <go*47*((dd-1)%11),<1
         rof
 
