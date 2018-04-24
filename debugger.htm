@@ -367,11 +367,11 @@
             var c = process_colors[1][core.current_process_index + 1]
             const ni = core.next_instruction();
 
-            var index = core.current_process().next() + ''
-            const l = (core.environment.core_size + '').length
-            index = index.padStart(l, '0')
-
             if (ni !== null) {
+                var index = core.current_process().next() + ''
+                const l = (core.environment.core_size + '').length
+                index = index.padStart(l, '0')
+            
                 draw_text(0, dy, `${index} ${ni.to_string(max_width - 1)}`, c)
             }
 
