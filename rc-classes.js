@@ -34,6 +34,11 @@ class Program {
         if (assembly.errors.count) {
             return
         }
+
+        if (this.metadata.get('NAME') === undefined) {
+            // we should always have a name
+            this.metadata.set('NAME', '?')
+        }
         
         this.instructions = assembly.code
         this.load_address = assembly.load_address
