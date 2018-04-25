@@ -46,14 +46,17 @@ class Program {
     }
 
     hash() {
-        var value_sum = 0
+        var hash = 0
+        var char = 0
 
-        for (var i = 0; i < this.instructions.length; i++)  {
-            const ins = this.instructions[i]
-            value_sum += ins.a.value + ins.b.value
+        for (var i = 0; i < this.code.length; i++) {
+            hash = ((hash * 31) + this.code.charCodeAt(i)) | 0
+            if (hash < 0) {
+                hash = -hash
+            }
         }
-        
-        return `Ix${this.instructions.length}${this.metadata.size}${this.load_address}${value_sum}`
+    
+        return `Wx${hash.toString(16).padStart(8, '0')}`
     }
 
 }
