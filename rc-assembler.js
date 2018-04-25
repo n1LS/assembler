@@ -43,7 +43,15 @@ class Assembler {
                     return null
                     
                 case 'ORG':
-                    this.load_address = parseInt(items[1].substr(1))
+                    if (items.length > 1) {
+                        this.load_address = parseInt(items[1].substr(1))
+                    }
+                    return null
+
+                case 'PIN':
+                    if (items.length > 1) {
+                        this.p_space_id = parseInt(items[1].substr(1))
+                    }
                     return null
             }
 
