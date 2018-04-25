@@ -25,16 +25,21 @@ class Instruction {
 
     is_equal(other) {
         return (this.op == other.op) && 
-               (this.a.is_equal(other.a)) && 
-               (this.b.is_equal(other.b))
+        (this.a.is_equal(other.a)) && 
+        (this.b.is_equal(other.b))
     }
-
+    
+    // execute
+    
     execute(address, ram) {
-        // execute
         return this.op.implementation(this, address, ram)
     }
-
+    
     //* boring io stuff ********************************************************
+    
+    hash() {
+        return `${this.opcode}${this.read_flag}${this.write_flag}${this.execution_flag}${this.a.mode}${this.a.value}${this.b.mode}${this.b.value}`         
+    }
 
     to_string(address_width) {
         if (address_width === undefined) {
