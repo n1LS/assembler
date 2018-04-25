@@ -83,10 +83,15 @@ function draw_flip() {
 }
 
 function draw_rect(x, y, w, h, color) {
-    for (var dx = x; dx < x + w; dx++) {
-        for (var dy = y; dy < y + h; dy++) {
-            draw_pixel(dx, dy, color)
+    const row_offset = width - w 
+    var idx = x + offs_x + (y + offs_y) * width
+
+    for (var dy = 0; dy < h; dy++) {
+        for (var dx = 0; dx < w; dx++) {
+            buf32[idx++] = color
         }
+
+        idx += row_offset
     }
 }
 
@@ -158,10 +163,15 @@ function draw_frame(x, y, w, h, color) {
 }
 
 function draw_triangles(x, y, w, h, color1, color2) {
-    for (dx = 0; dx < w; dx++) {
-        for (dy = 0; dy < h; dy++) {
-            draw_pixel(x + dx, y + dy, dy < dx ? color2 : color1)
+    const row_offset = width - w 
+    var idx = x + offs_x + (y + offs_y) * width
+
+    for (var dy = 0; dy < h; dy++) {
+        for (var dx = 0; dx < w; dx++) {
+            buf32[idx++] = dy < dx ? color2 : color1
         }
+
+        idx += row_offset
     }
 }
 
