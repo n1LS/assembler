@@ -11,7 +11,7 @@ _WorkingTitle_ is an assembly-type programming language inspired heavily by and 
 ## Instruction set
 
 ### MOV A, B
-Copy A to B
+Copy A-val to B-target
 ### ADD
 ADD replaces the B-target with the sum of the A-value and the B-value
 ### JMP A
