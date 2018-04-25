@@ -135,14 +135,12 @@
 
                 if (a.errors.length == 0) {
                     modified = true
-                    document.getElementById('log').innerHTML +=
-                        '<span class="yay">ASSEMBLED SUCCESSFULLY.</span><br>'
+                    document.getElementById('log').innerHTML += '<span class="yay">ASSEMBLED SUCCESSFULLY.</span><br>'
                 }
 
                 document.getElementById('save_button').hidden = (a.errors.length > 0)
             } else {
-                document.getElementById('assembler_output').innerHTML =
-                    '<b>Preprocessor errors prevented assembly.</b>'
+                document.getElementById('assembler_output').innerHTML = '<b>Preprocessor errors prevented assembly.</b>'
                 document.getElementById('save_button').hidden = true
             }
 
