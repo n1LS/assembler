@@ -90,6 +90,73 @@ function draw_rect(x, y, w, h, color) {
     }
 }
 
+function draw_button(x, y, text, text_color, border_color) {
+    if (text_color === undefined) {
+        text_color = kWhite
+    }
+    if (border_color === undefined) {
+        border_color = kGrey
+    }
+
+    const w = text.length + 2
+
+    draw_frame(x, y, w, 3, border_color)
+
+    draw_text(x + row_height, y + row_height, text, text_color)
+
+    var rect = {
+        x1: x,
+        y1: y,
+        x2: x + w * row_height,
+        y2: y + 3 * row_height,
+        width: w * row_height
+    }
+
+    return rect
+}
+
+function draw_checkbox(x, y, text, checked) {
+    draw_frame(x, y, 3, 3, kGrey)
+
+    // check mark
+    draw_symbol(x + row_height, y + row_height, checked ? 149 : 32, kWhite)
+
+    // title
+    draw_text(x + 4 * row_height, y + row_height, text, kWhite)
+
+    const w = text.length + 4
+    const rect = {
+        x1: x,
+        y1: y,
+        x2: x + w * row_height,
+        y2: y + 3 * row_height,
+        width: w * row_height
+    }
+
+    return rect
+}
+
+function draw_frame(x, y, w, h, color) {
+    h--
+    w--
+
+    draw_symbol(x, y, 128, color)
+    draw_symbol(x + w * row_height, y, 130, color)
+    draw_symbol(x + w * row_height, y + h * row_height, 133, color)
+    draw_symbol(x, y + h * row_height, 131, color)
+
+    for (var dx = 1; dx < w; dx++) {
+        draw_symbol(x + dx * row_height, y, 129, color)
+        draw_symbol(x + dx * row_height, y + h * row_height, 132, color)
+    }
+
+    for (var dy = 1; dy < h; dy++) {
+        var ddy = y + dy * row_height
+        draw_symbol(x, ddy, 134, color)
+        draw_symbol(x + w * row_height, ddy, 135, color)
+    }
+}
+
 function draw_triangles(x, y, w, h, color1, color2) {
     for (dx = 0; dx < w; dx++) {
         for (dy = 0; dy < h; dy++) {

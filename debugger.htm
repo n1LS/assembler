@@ -36,6 +36,7 @@
         var buttons
         var scale = 1
         var cycles = 1
+        var memory = new Array(environment.core_size)
 
         function run() {
             stop()
@@ -59,12 +60,6 @@
 
         function toggle_boost() {
             cycles = cycles == 1 ? 1000 : 1
-        }
-
-        var memory = new Array(environment.core_size)
-
-        function hash(instruction) {
-            return `${instruction.opcode}${instruction.read_flag}${instruction.write_flag}${instruction.execution_flag}${instruction.a.mode}${instruction.a.value}${instruction.b.mode}${instruction.b.value}`
         }
 
         function draw_memory_1x1(w, h) {
@@ -136,51 +131,34 @@
             }
 
             for (var i = 0; i < num_visible; i++) {
+                const dark = i >= core.environment.core_size
+
                 const idx = i % core.environment.core_size
                 const instruction = core.ram.memory[idx]
-                const i_hash = hash(instruction)
+                const i_hash = instruction.hash()
 
                 if (i_hash == memory[i]) {
-                    continue;
+                    continue
                 }
 
                 memory[i] = i_hash
 
+                var color = process_colors[0][instruction.execution_flag + 1]
+                var color1 = process_colors[2][instruction.read_flag + 1]
+                var color2 = process_colors[2][instruction.write_flag + 1]
+                
+                if (dark) {
+                    color = draw_darken(color)
+                    color1 = draw_darken(color1)
+                    color2 = draw_darken(color2)
+                }
+                
                 var l = location(i)
                 const x = l.x * size
                 const y = l.y * size
 
-                var color1 = process_colors[2][instruction.read_flag + 1]
-                var color2 = process_colors[2][instruction.write_flag + 1]
-
-                if (i >= core.environment.core_size) {
-                    color1 = draw_darken(color1)
-                    color2 = draw_darken(color2)
-                }
-
                 draw_triangles(x, y, size, size, color1, color2)
-
-                const symbol = {
-                    'MOV': 0,
-                    'DAT': 1,
-                    'JMP': 2,
-                    'NOP': 3,
-                    'SPL': 4,
-                    'ADD': 5,
-                    'SUB': 6,
-                    'JMZ': 7,
-                    'JNZ': 8,
-                    'CMP': 9,
-                    'DJN': 10,
-                }[instruction.op.name]
-
-                var color = process_colors[0][instruction.execution_flag + 1]
-
-                if (i >= core.environment.core_size) {
-                    color = draw_darken(color)
-                }
-
-                draw_symbol(x, y, symbol, color)
+                draw_symbol(x, y, instruction.op.opcode, color)
             }
         }
 
@@ -194,7 +172,6 @@
             const num_visible = cols * rows
 
             if (num_visible < core.environment.core_size) {
-                // usable sizes are 5x5 / 3x3 / 1x1
                 const sizes = [7, 6, 5, 4, 3, 1]
 
                 for (var s = 0; s < sizes.length; s++) {
@@ -219,7 +196,6 @@
 
         function draw_memory_dump(x, y, w, data, highlight) {
             draw_rect(x, y, w, row_height * data.length, kBlack)
-
             draw_rect(x, y + highlight * row_height, w, row_height, kDarkGrey)
 
             for (var i = 0; i < data.length; i++) {
@@ -227,72 +203,6 @@
             }
 
             return row_height * data.length
-        }
-
-        function draw_frame(x, y, w, h, color) {
-            h -= 1
-            w -= 1
-            draw_symbol(x, y, 128, color)
-            draw_symbol(x + w * row_height, y, 130, color)
-            draw_symbol(x + w * row_height, y + h * row_height, 133, color)
-            draw_symbol(x, y + h * row_height, 131, color)
-
-            for (var dx = 1; dx < w; dx++) {
-                draw_symbol(x + dx * row_height, y, 129, color)
-                draw_symbol(x + dx * row_height, y + h * row_height, 132, color)
-            }
-
-            for (var dy = 1; dy < h; dy++) {
-                var ddy = y + dy * row_height
-                draw_symbol(x, ddy, 134, color)
-                draw_symbol(x + w * row_height, ddy, 135, color)
-            }
-        }
-
-        function draw_button(x, y, text, text_color, border_color) {
-            if (text_color === undefined) {
-                text_color = kWhite
-            }
-            if (border_color === undefined) {
-                border_color = kGrey
-            }
-
-            const w = text.length + 2
-
-            draw_frame(x, y, w, 3, border_color)
-
-            draw_text(x + row_height, y + row_height, text, text_color)
-
-            var rect = {
-                x1: x,
-                y1: y,
-                x2: x + w * row_height,
-                y2: y + 3 * row_height,
-                width: w * row_height
-            }
-
-            return rect
-        }
-
-        function draw_checkbox(x, y, text, checked) {
-            draw_frame(x, y, 3, 3, kGrey)
-
-            // check mark
-            draw_symbol(x + row_height, y + row_height, checked ? 149 : 32, kWhite)
-
-            // title
-            draw_text(x + 4 * row_height, y + row_height, text, kWhite)
-
-            const w = text.length + 4
-            const rect = {
-                x1: x,
-                y1: y,
-                x2: x + w * row_height,
-                y2: y + 3 * row_height,
-                width: w * row_height
-            }
-
-            return rect
         }
 
         function draw(redraw) {
@@ -323,9 +233,8 @@
 
             draw_rect(0, 0, dx, height - 3 * row_height, kBlack);
 
-            // TODO: use number of lines according to the thingie
             const total_rows = ~~(canvas.height / scale / row_height)
-            const usable_rows = total_rows - 8 //\n,next,cycle,\n,toolbar
+            const usable_rows = total_rows - 8 // \n, next, cycle, \n, toolbar
             const rows_per_process = ~~(usable_rows / core.processes.length)
             const memory_rows = rows_per_process - 2 /* title, spaver */
             const look_behind = ~~(memory_rows / 4)
@@ -337,7 +246,7 @@
 
                 const max_len = dump_width - 2 - (pid + '').length
                 if (name.length > max_len) {
-                    name = name.substr(0, max_len)
+                    name = name.substr(0, max_len - 1) + char_ellipsis
                 }
 
                 draw_text(0, dy, `#${pid} ${name}`, process_colors[1][pid + 1])
@@ -355,7 +264,7 @@
                 const available = 22 - title.length
 
                 if (s.length > available) {
-                    s = s.substr(0, available - 1) + String.fromCharCode(31)
+                    s = s.substr(0, available - 1) + char_ellipsis
                 } else {
                     s = s.substr(0, available)
                 }
@@ -369,7 +278,7 @@
 
             if (ni !== null) {
                 var index = core.current_process().next() + ''
-                const l = (core.environment.core_size + '').length
+                const l = (core.environment.core_size - 1 + '').length
                 index = index.padStart(l, '0')
             
                 draw_text(0, dy, `${index} ${ni.to_string(max_width - 1)}`, c)
@@ -524,125 +433,6 @@ start   CMP #0, 1
         DAT #2, #2
 `
 
-            var code_validate = `
-;redcode
-;name Validate 1.1R
-;author Stefan Strack
-;strategy System validation program - based on Mark Durham's validation suite
-;
-;   This program tests your corewar system for compliance with the ICWS88-
-;   standard and compatibility with KotH. It self-ties (i.e. loops forever)
-;   if the running system is ICWS88-compliant and uses in-register evaluation;
-;   suicides (terminates) if the interpreter is not ICWS compliant and/or uses
-;   in-memory evaluation. A counter at label 'flag' can be used to determine
-;   where the exception occured.
-;
-;   Tests:
-;   -all opcodes and addressing modes
-;   -ICWS88-style ADD/SUB
-;   -ICWS88-style SPL
-;   -correct timing
-;   -in-memory vs. in-register evaluation
-;   -core initialization
-;
-;   Version 1.1: added autodestruct in case process gets stuck
-
-
-;assert MAXLENGTH >= 90
-
-start   spl l1,count+1
-        jmz <start,0
-count   djn count,#36      ;time cycles
-        sub #1,@start
-clear   mov t1,<last+2     ;autodestruct if stuck
-        jmp clear
-t1      dat #0,#1
-t2      dat #0,#3
-l1      spl l2
-        dat <t2,<t2
-l2      cmp t1,t2
-        jmp fail
-        spl l4
-        jmz l3,<0
-t3      dat #0,#1
-t4      dat #0,#2
-l3      jmp @0,<0
-l4      jmp <t5,#0
-        jmp l5
-t5      dat #0,#0
-t6      dat #0,#-1
-l5      cmp t3,t4
-        jmp fail
-        cmp t5,t6
-        jmp fail
-        jmp <t7,<t7
-        jmp l6
-t7      dat #0,#0
-t8      dat #0,#-2
-l6      cmp t7,t8
-        jmp fail
-        mov t9,<t9         ;test in-memory evaluation
-t9      jmn l7,1
-t10     jmn l7+1,1
-l7      cmp t9,t10
-        jmp fail
-        mov @0,<t11
-t11     jmn l8,1
-t12     jmn l8+1,1
-l8      cmp t11,t12
-        jmp fail
-        spl l9
-        mov <t13,t14
-t13     dat <0,#1
-t14     dat <0,#1
-t15     dat <0,#-1
-l9      mov <t16,t16
-t16     jmz l10,1
-        jmp fail
-l10     cmp t13,t15
-        jmp fail
-        add t17,<t17
-t17     jmp 1,1
-t18     jmp 2,1
-        cmp t17,t18
-        jmp fail
-        add @0,<t19
-t19     jmp 1,1
-        jmp fail
-        cmp t18,t19
-        jmp fail
-        spl l11            ;ICWS86 SPL will fail here
-        cmp t20,t21
-        jmp l12
-        jmp fail
-l11     sub <t20,t20
-t20     dat #2,#1
-t21     dat #0,#0
-l12     cmp t20,t21
-        jmp fail
-t22     sub <t23,<t23
-t23     jmp l13,1
-t24     sub <-2,<1
-t25     jmp l13+2,-1
-l13     cmp t22,t24
-        jmp fail
-        cmp t23,t25
-        jmp fail
-        cmp start-1,t26    ;Core initialization dat 0,0
-        jmp l14
-        jmp fail
-t26     dat #0,#0
-l14     slt #0,count       ;check cycle timer
-        jmp success
-fail    mov count,flag     ;save counter for post-mortem debugging
-	mov t1,count       ;kill counter
-	jmp clear          ;and auto-destruct
-flag    dat #0
-success mov flag,clear     ;cancel autodestruct
-last    jmp 0              ;and loop forever
-
-        end start
-`
             // init both prpgrams
             core.load_program(new Program(code_imp, core.environment))
             core.load_program(new Program(code_imp, core.environment))
