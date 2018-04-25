@@ -1,6 +1,6 @@
 class Environment {
 
-    constructor () {
+    constructor() {
         this.max_instructions   = 100
         this.core_size          = 4000
         this.max_threads        = 128
