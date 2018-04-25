@@ -17,7 +17,10 @@ class Instruction {
     }
 
     copy() {
-        return new Instruction(this.op.opcode, this.a.copy(), this.b.copy())
+        const a = new Value(this.a.value, this.a.mode)
+        const b = new Value(this.b.value, this.b.mode)
+
+        return new Instruction(this.op.opcode, a, b)
     }
 
     is_equal(other) {
