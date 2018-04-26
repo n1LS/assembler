@@ -1,43 +1,75 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
+    <link href='https://schickt.de/font/px8x8.css' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="style/style.css" media="screen" />
+    
+    <meta charset='utf-8' />
     <style>
-        * {
-            background: black;
-            border: 0px;
-            margin: 0px;
-            padding: 0px;
-        }
-
+        
         #display {
             width: 100%;
             height: 100%;
-            background: black;
         }
+
+        #rdb {
+            width: 50%;
+            height: 100%;
+            left: 100%;
+            top: 0;
+            position: absolute;
+            background-color: black;
+        }
+
+        #debugger-switch {
+            position: absolute;
+            margin-left: -24px;
+            width: 24px;
+            background-color: #4080a0;
+        }
+
+        #debugger-output {
+            height: calc(100% - 32px);
+            width: 100%;
+            color: white;
+            overflow: scroll;
+            padding-left: 8px;
+        }
+
+        #debugger-input {
+            width: 100%;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
     </style>
 
-    <script src="rc-core.js"></script>
-    <script src="rc-math.js"></script>
-    <script src="rc-address-modes.js"></script>
-    <script src="rc-preprocessor.js"></script>
-    <script src="rc-assembler.js"></script>
-    <script src="rc-classes.js"></script>
-    <script src="rc-instruction.js"></script>
-    <script src="rc-instruction-set.js"></script>
+    <script src='rc-core.js'></script>
+    <script src='rc-rdb.js'></script>
+    <script src='rc-math.js'></script>
+    <script src='rc-address-modes.js'></script>
+    <script src='rc-preprocessor.js'></script>
+    <script src='rc-assembler.js'></script>
+    <script src='rc-classes.js'></script>
+    <script src='rc-instruction.js'></script>
+    <script src='rc-instruction-set.js'></script>
 
-    <script src="canvas-draw.js"></script>
-    <script src="canvas-font.js"></script>
+    <script src='canvas-draw.js'></script>
+    <script src='canvas-font.js'></script>
 
     <script>
-        var environment = new Environment()
+        var rdb
+        var environment
+        var memory
+        
         var core
         var timer
         var buttons
         var scale = 1
         var cycles = 1
-        var memory = new Array(environment.core_size)
-
+        
         function run() {
             stop()
             timer = setInterval(run_cycle, 20)
@@ -212,7 +244,7 @@
                 redraw = false
             }
 
-            const canvas = document.getElementById("display")
+            const canvas = document.getElementById('display')
 
             if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight || redraw) {
                 canvas.width = canvas.clientWidth
@@ -268,6 +300,7 @@
                 } else {
                     s = s.substr(0, available)
                 }
+
                 draw_text(title.length * row_height, dy, s, kWhite)
 
                 dy += row_height * 2
@@ -355,16 +388,26 @@
             draw_flip()
 
             const elapsed = ~~(100 * (performance.now() - start)) / 100
-            document.title = elapsed + "ms " + (redraw ? "full" : "part")
+            document.title = elapsed + 'ms ' + (redraw ? 'full' : 'part')
         }
 
         function init_everything() {
+            environment = new Environment()
+            memory = new Array(environment.core_size)
             core = new Core(environment)
+
+            rdb = new Debugger()
+            rdb.attach_to(core)
+            rdb.output_handler = function(text) {
+                const div = document.getElementById('debugger-output')
+                div.innerHTML += text + '\n'
+                div.scrollTop = div.scrollHeight
+            }
 
             var code0 =
 `
 ;name idle                
- jmp 0
+idle jmp 0
 `
 
             var code_imp =
@@ -432,7 +475,6 @@ start   CMP #0, 1
         DAT #2, #2
         DAT #2, #2
 `
-
             // init both prpgrams
             core.load_program(new Program(code_imp, core.environment))
             core.load_program(new Program(code_imp, core.environment))
@@ -447,27 +489,6 @@ start   CMP #0, 1
             scale = Math.max(1.0, scale + diff / 2)
             draw(true)
         }
-
-        document.onkeydown = function (event) {
-            event = event || window.event;
-
-            switch (event.keyCode) {
-                case 'S'.charCodeAt(0):
-                    run_cycle()
-                    break
-                case 109: // -
-                    set_size(-1)
-                    break;
-                case 107: // +
-                    set_size(+1)
-                    break
-                case 'D'.charCodeAt(0):
-                    for (var i = 0; i < 10; i++) run_cycle()
-                    break
-                default:
-                    console.log(event.keyCode)
-            }
-        };
 
         function message_handler(event) {
             items = event.data.split('::')
@@ -496,12 +517,78 @@ start   CMP #0, 1
             draw(1)
         }
 
+        function rdb_run(instruction) {
+            rdb.command(instruction)
+        }
+
+        document.onkeydown = function(event) {
+            if (document.activeElement.nodeName == 'INPUT') {
+                if (event.keyCode == 13) {
+                    const input = document.getElementById('debugger-input')
+                    const value = input.value
+                    input.value = ''
+
+                    const output = document.getElementById('debugger-output')
+                    
+                    if (value == 'clear') {
+                        output.innerHTML = ''
+                    }
+                    else if (value && value.length > 0) {
+
+                        output.innerHTML += `(gdb) ${value}\n`
+                        rdb_run(value)
+                    }
+                }
+
+                return
+            }
+
+            event = event || window.event;
+
+            switch (event.keyCode) {
+                case 'S'.charCodeAt(0):
+                    run_cycle()
+                    break
+                case 109: // -
+                    set_size(-1)
+                    break;
+                case 107: // +
+                    set_size(+1)
+                    break
+                case 'D'.charCodeAt(0):
+                    for (var i = 0; i < 10; i++) run_cycle()
+                    break
+                default:
+                    console.log(event.keyCode)
+            }
+        }
+
+var visible = false
+
+        function toggle_debugger() {
+            const dgb = document.getElementById('rdb')
+            
+            visible = !visible
+
+            if (visible) {
+                dgb.style.left = '50%'
+            } else {
+                dgb.style.left = '100%'
+            }
+        }
+
     </script>
 
 </head>
 
-<body onload="init_everything()" onresize="draw()">
-    <canvas id="display"></canvas>
+<body onload='init_everything()' onresize='draw()'>
+    <canvas id='display'></canvas>
+    <div id='rdb'>
+        <div id='debugger-switch' onclick='toggle_debugger()'><br>&nbsp;&lt;&nbsp;<br>&nbsp;&gt;&nbsp;<br>&nbsp;</div>
+        <pre id='debugger-output'></pre>
+        <input id='debugger-input' placeholder='(rdb)'>
+    </div>
+
 </body>
 
 </html>
