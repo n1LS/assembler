@@ -524,27 +524,51 @@ start   CMP #0, 1
             draw(1)
         }
 
+        function focus_dbg_input() {
+            const input = document.getElementById('debugger-input')
+            const pos = input.value.length - 1
+            input.focus()
+            input.selectionStart = pos
+        }
+
         function rdb_run(instruction) {
             rdb.command(instruction)
         }
 
         document.onkeydown = function(event) {
             if (document.activeElement.nodeName == 'INPUT') {
-                if (event.keyCode == 13) {
-                    const input = document.getElementById('debugger-input')
-                    const value = input.value
-                    input.value = ''
 
-                    const output = document.getElementById('debugger-output')
+                const input = document.getElementById('debugger-input')
+                
+                switch (event.keyCode) {
+                    case 13:
+                        const value = input.value
+                        input.value = ''
+        
+                        const output = document.getElementById('debugger-output')
+                        
+                        if (value == 'clear') {
+                            output.innerHTML = ''
+                        }
+                        else if (value && value.length > 0) {
+        
+                            output.innerHTML += `<span class='command'>(rdb) ${value}</span>\n`
+                            rdb_run(value)
+                        }
+                        break
                     
-                    if (value == 'clear') {
-                        output.innerHTML = ''
-                    }
-                    else if (value && value.length > 0) {
+                    case 38: // up arrow
+                        input.value = rdb.history.get_previous()
+                        focus_dbg_input()
+                        break
 
-                        output.innerHTML += `<span class='command'>(rdb) ${value}</span>\n`
-                        rdb_run(value)
-                    }
+                    case 40: // down arrow
+                        input.value = rdb.history.get_next()
+                        focus_dbg_input()
+                        break
+                    
+                    default:
+                        console.log(event.keyCode)
                 }
 
                 return
@@ -570,7 +594,8 @@ start   CMP #0, 1
             }
         }
 
-var visible = false
+        // TEMP
+        var visible = false
 
         function toggle_debugger() {
             const dgb = document.getElementById('rdb')
