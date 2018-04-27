@@ -20,6 +20,8 @@
     
     <script>
 
+        const base_url = 'https://raw.githubusercontent.com/n1LS/redcode-warriors/master/'
+
         var selected = []
         var code = []
         var current_selection = null
@@ -62,7 +64,7 @@
             const name = item[1]
 
             if (source === 'REMOTE') {
-                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/' + name;
+                var url = base_url + name;
                 var file = new XMLHttpRequest();
 
                 file.onreadystatechange = function () {
@@ -119,7 +121,7 @@
         function load_remote_warriors() {
             // load remote warriors
             setTimeout(function () {
-                var url = 'https://raw.githubusercontent.com/n1LS/assembler/master/warriors/listing.txt';
+                var url = base_url + 'listing.txt';
                 var file = new XMLHttpRequest();
 
                 file.onreadystatechange = function () {

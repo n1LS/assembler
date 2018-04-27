@@ -22,16 +22,22 @@
             transition: left 0.5s ease;
         }
 
+        .command {
+            color: #b0b0b0;
+        }
+
         #debugger-switch {
             position: absolute;
             margin-left: -24px;
             width: 24px;
-            background-color: #4080a0;
+            background-color: white;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
         }
 
         #debugger-output {
             height: calc(100% - 32px);
-            width: 100%;
+            width: calc(100% - 8px);
             color: white;
             overflow: scroll;
             padding-left: 8px;
@@ -536,7 +542,7 @@ start   CMP #0, 1
                     }
                     else if (value && value.length > 0) {
 
-                        output.innerHTML += `(gdb) ${value}\n`
+                        output.innerHTML += `<span class='command'>(rdb) ${value}</span>\n`
                         rdb_run(value)
                     }
                 }
@@ -585,7 +591,7 @@ var visible = false
 <body onload='init_everything()' onresize='draw()'>
     <canvas id='display'></canvas>
     <div id='rdb'>
-        <div id='debugger-switch' onclick='toggle_debugger()'><br>&nbsp;&lt;&nbsp;<br>&nbsp;&gt;&nbsp;<br>&nbsp;</div>
+        <div id='debugger-switch' class='clickable' onclick='toggle_debugger()'><br>&nbsp;&lt;&nbsp;<br>&nbsp;&gt;&nbsp;<br>&nbsp;</div>
         <pre id='debugger-output'></pre>
         <input id='debugger-input' placeholder='(rdb)'>
     </div>

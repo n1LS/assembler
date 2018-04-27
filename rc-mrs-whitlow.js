@@ -28,7 +28,7 @@ class MrsWhitlow {
         this.run_tournament_match(0, 0, true)
     }    
 
-    run_match(score_callback) {
+    run_match(score_callback) {
         this.score_callback = score_callback
         this.zeus.on_log = undefined
 
