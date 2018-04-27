@@ -34,12 +34,58 @@ function create_min_keywords() {
 
 // implementation **************************************************************
 
+class CommandHistory {
+
+    constructor() {
+        this.history = []
+        this.index = 0
+    }
+
+    push_command(command) {
+        var i = this.history.indexOf(command)
+        
+        if (i != -1) {
+            this.history.splice(i, 1)
+        }
+
+        this.history.push(command)
+        this.index = this.history.length
+    }
+
+    get_previous() {
+        if (this.index > 0) {
+            this.index--
+        }
+
+        return this.get_current()
+    }
+
+    get_current() {
+        if (this.history.length) {
+            const idx = Math.min(this.index, this.history.length - 1)
+            return this.history[this.index]
+        }
+
+        return ''
+    }
+
+    get_next() {
+        if (this.index < this.history.length - 1) {
+            this.index++
+        }
+
+        return this.get_current()
+    }
+}
+
 class Debugger {
 
     constructor() {
         create_min_keywords()
         this.core = undefined
         this.output_handler = console.log
+
+        this.history = new CommandHistory()
     }
 
     output(text) {
@@ -58,6 +104,8 @@ class Debugger {
             return
         }
 
+        this.history.push_command(instruction)
+
         instruction = instruction.trim()
 
         var list = instruction.split(' ')
@@ -65,7 +113,7 @@ class Debugger {
         var success = false
 
         rdb_commands.forEach(command => {
-            if (keyword === command.keyword) {
+            if (keyword.startsWith(command.shorthand)) {
                 success = true
 
                 switch (command.action) {
