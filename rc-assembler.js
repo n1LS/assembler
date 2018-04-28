@@ -1,4 +1,4 @@
-class Assembler {
+    class Assembler {
 
     constructor() {
         this.warnings = null

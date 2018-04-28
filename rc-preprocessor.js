@@ -53,9 +53,22 @@ class Preprocessor {
             var ins = instructions[i].text
             var idx = instructions[i].line
             
+            // fix label:
+            ins = ins.replace(/^([^\s]+):/g, '$1 ')
+
+            // fix end as label
+            ins = ins.replace(/^END\s/g, '\tEND\t')
+
             // remove multiple spaces
             ins = ins.replace(/\s+|\t+/g, ' ')
             
+            // try fixing "address mode space value"-issues like "dat # 3"
+            const modes = Array.from(addr_names.values()).map(e => e.display)
+            modes.forEach(mode => {
+                var re = new RegExp(` \\${mode} `, 'g')
+                ins = ins.replace(re, ` ${mode}`)
+            })
+
             // there's a few options here. If there is no comma separating the 
             // operands, there cannot be any spaces in the command (spaces 
             // displayed as _ in the examples below):
@@ -174,8 +187,12 @@ class Preprocessor {
         })
 
         idents.forEach(key => {
-            while (text.includes(key)) {
-                text = text.replace(key, `(${all.get(key)})`)
+            const value = '' + all.get(key)
+
+            if (!value.includes(key)) {
+                while (text.includes(key)) {
+                    text = text.replace(key, `(${value})`)
+                }
             }
         })
 
@@ -393,6 +410,13 @@ class Preprocessor {
         catch (error) {
             this.errors.push(`E008: Unresolvable address '${value}'`)
         }
+
+        if (isNaN(v)) {
+            this.errors.push(`E010: Value '${value}' is not a number`)
+        }
+
+        // normalize the value
+        v %= this.environment.core_size
 
         return prefix + v
     }
