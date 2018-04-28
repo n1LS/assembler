@@ -15,6 +15,9 @@
 
     <script src='rc-instruction-set.js'></script>
     <script src='rc-address-modes.js'></script>
+    <script src='rc-preprocessor.js'></script>
+    <script src='rc-assembler.js'></script>
+    <script src='rc-classes.js'></script>
     
     <script src='ui-common.js'></script>
     
@@ -26,6 +29,7 @@
         var code = []
         var current_selection = null
         var current_code = null
+        var remote_warriors = []
 
         function add(item, source) {
             if (selected.includes(item)) {
@@ -41,6 +45,19 @@
             })
 
             list_selected()
+        }
+        
+        function add_all_remote() {
+            remote_warriors.forEach(w => {
+                if (!selected.includes(w)) {
+                    load(w, function(data) {
+                        selected.push(w)
+                        code[w] = data
+                        
+                        list_selected()
+                    })
+                }
+            })
         }
 
         function list_selected() {
@@ -128,8 +145,14 @@
 
                     if (file.readyState == 4 && file.status == 200) {
                         var items = file.responseText.split('\n').map(x => x = 'REMOTE:' + x)
-                        document.getElementById('public').innerHTML = make_ul(items, 'add', false)
                     }
+                    else {
+                        var items = []
+                    }
+                    
+                    remote_warriors = items
+
+                    document.getElementById('public').innerHTML = make_ul(items, 'add', false)
                 }
 
                 file.open('GET', url, true);
@@ -163,6 +186,34 @@
             window.parent.postMessage(`match::load::${selected_warriors()}`, '*')
         }
 
+        function verify_code(preprocessor, environment, assembler, items) {
+            const item = items.shift()
+            const c = code[item]
+            var p = preprocessor.preprocess(c, environment)
+            var info = '<br>'
+
+            if (p.warnings.length || p.errors.length) {
+                info = `<br>  ${p.warnings.length} warning(s), ${p.errors.length} error(s).<br>`
+            }
+            
+            document.getElementById('code').innerHTML += `* ${p.metadata.get('NAME')}${info}`
+
+            if (items.length) {
+                setTimeout(verify_code(preprocessor, environment, assembler, items), 0)
+            }
+        }
+
+        function verify() {
+            const env = new Environment() // TEMP 
+            const pre = new Preprocessor()
+            const ass = new Assembler()
+
+            document.getElementById('code').innerHTML = ''
+
+            var all = selected.slice()
+            verify_code(pre, env, ass, all)
+        }
+
         function load_local_warriors() {
             // load local warriors
             var items = []
@@ -187,8 +238,9 @@
             load_local_warriors();
         }
 
+        function message_handler(event) { 
 
-        function message_handler(event) { }
+        }
 
         function remove_all() {
             code = []
@@ -210,7 +262,9 @@
 
         <div class='left30 padded light no-overflow'>
 
-            <div class='heading'>PUBLIC WARRIORS:</div>
+            <div class='heading'>PUBLIC WARRIORS:
+                <span class='right clickable' onclick='add_all_remote()'>[ADD ALL]</span>
+            </div>
             <div id='public' class='max-h-30'></div>
             <br>
 
@@ -236,6 +290,7 @@
     <div class='toolbar'>
         <input type='button' value='SELECTED to DEBUGGER' onclick='launch()'>
         <input type='button' value='SELECTED to MATCH' onclick='match()'>
+        <input type='button' value='VERIFY SELECTED' onclick='verify()'>
         <input type='button' value='CODE to ASSEMBLER' onclick='move_to_assembler()' class='right'>
     </div>
 </body>
