@@ -68,13 +68,15 @@ function draw_pixel(x, y, color) {
 
 function draw_flip() {
     image_data.data.set(buf8)
-    
+  
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     
+    ctx.imageSmoothingEnabled = false
     ctx.putImageData(image_data, 0, 0)
     
     if (scale !== 1) {
+        console.log(scale)
         ctx.imageSmoothingEnabled = ~~scale != scale
         ctx.scale(scale, scale)
         ctx.drawImage(ctx.canvas, 0, 0)
