@@ -157,7 +157,7 @@ class Zeus {
         } else if (survivors.length == 1) {
             this.report(`Round #${round+1} WON after ${this.core.cycle} cycles by ${survivors[0].name}`)
         } else {
-            console.log('Impossibru!')
+            throw 'NoSurvivingProcessError'
         }
         
         // calculate score by formula (w * w - 1) / s
